@@ -45,7 +45,7 @@
 static const char *TAG = "example";
 
 char addr_str[45];
-// esp_aes_context AES_ctx;
+esp_aes_context AES_ctx;
 
 // static uint8_t* key_256;
 // static const uint8_t* iv;
@@ -76,12 +76,15 @@ int retrieve_session_credentials(char* cred_enc) {
 
     if (pt == NULL) return 0; 
     
-    pt = strtok (NULL, sep);
+    pt = strtok(NULL, sep);
     base64_size = strlen(pt);
     iv = base64_decode(pt, base64_size, &size);
 
     esp_aes_context aes = init_AES(key_256);
+    AES_ctx = init_AES(key_256);
     set_AES_ctx(addr_str, &aes);
+    set_user_state(addr_str, CONNECTED);
+
     return 1;
 }
 
@@ -103,13 +106,13 @@ static void do_retransmit(const int sock) {
         } else {
             rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
             ESP_LOGI(TAG, "Received %d bytes: %s", len, rx_buffer);
-            ESP_LOGI(TAG, "Received from IP %s", addr_str);
 
             user_state_t state = get_user_state(addr_str);
             esp_aes_context* aes_pt = NULL;
+            aes_pt = get_user_AES_ctx_pt(addr_str);
 
             char* response;
-            if (state == CONNECTED) {
+            if (state == CONNECTING) {
                 if (retrieve_session_credentials(rx_buffer)) {
 
                     uint8_t* auth_seed = generate_random_seed(addr_str);
@@ -128,21 +131,23 @@ static void do_retransmit(const int sock) {
 
                     aes_pt = get_user_AES_ctx_pt(addr_str);
                 } else {
+                    ESP_LOGE(TAG, "Disconnected by server! (Error getting session key)");
                     disconnect_sock(sock);
                     return;
                 }
-            } else if (state == AUTHORIZED) {
+            } else if (state == CONNECTED) {
                 aes_pt = get_user_AES_ctx_pt(addr_str);
-                char* cmd = decrypt_base64_AES(*aes_pt, rx_buffer);
+                char* cmd = decrypt_base64_AES(AES_ctx, rx_buffer);
+                ESP_LOGI(TAG, "After Dec: %s", cmd);
                 response = checkCommand(cmd, addr_str);
             } else {
+                ESP_LOGE(TAG, "Disconnected by server! (Not CONNECTED)");
                 disconnect_sock(sock);
                 return;
             }
 
 
-            
-            char* response_enc = encrypt_str_AES(*aes_pt, response);
+            char* response_enc = encrypt_str_AES(AES_ctx, response);
             len = strlen(response_enc);
 
 
@@ -246,7 +251,7 @@ static void tcp_server_task(void *pvParameters) {
 #endif
         ESP_LOGI(TAG, "Socket accepted ip address: %s", addr_str);
 
-        set_user_state(addr_str, CONNECTED);
+        set_user_state(addr_str, CONNECTING);
 
         ccomp_timer_start(); //FIXME remove
         ESP_LOGE(TAG, "TEST: %ld", (long) ccomp_timer_stop()); //FIXME remove

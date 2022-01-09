@@ -8,8 +8,9 @@
 
 typedef enum {
     DISCONNECTED = 0,
-    CONNECTED = 1,
-    AUTHORIZED = 2
+    CONNECTING = 1,
+    CONNECTED = 2,
+    AUTHORIZED = 3
 } user_state_t;
 
 typedef struct {
