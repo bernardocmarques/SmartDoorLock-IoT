@@ -45,16 +45,9 @@
 static const char *TAG = "example";
 
 char addr_str[45];
-esp_aes_context AES_ctx;
-
-// static uint8_t* key_256;
-// static const uint8_t* iv;
-
-
 
 int retrieve_session_credentials(char* cred_enc) {
     uint8_t* key_256;
-    uint8_t* iv;
     ESP_LOGI(TAG, "Cred Enc %s", cred_enc);
     
     char* cred = decrypt_base64_RSA(cred_enc);
@@ -74,14 +67,8 @@ int retrieve_session_credentials(char* cred_enc) {
     base64_size = strlen(pt);
     key_256 = base64_decode(pt, base64_size, &size);
 
-    if (pt == NULL) return 0; 
-    
-    pt = strtok(NULL, sep);
-    base64_size = strlen(pt);
-    iv = base64_decode(pt, base64_size, &size);
 
     esp_aes_context aes = init_AES(key_256);
-    AES_ctx = init_AES(key_256);
     set_AES_ctx(addr_str, aes);
     set_user_state(addr_str, CONNECTED);
 
@@ -254,9 +241,9 @@ static void tcp_server_task(void *pvParameters) {
 
         set_user_state(addr_str, CONNECTING);
 
-        ccomp_timer_start(); //FIXME remove
-        ESP_LOGE(TAG, "TEST: %ld", (long) ccomp_timer_stop()); //FIXME remove
-        ccomp_timer_start(); //FIXME remove
+        ccomp_timer_start(); //FIXME remove timer
+        ESP_LOGE(TAG, "TIMERS: %ld", (long) ccomp_timer_stop()); //FIXME remove timer
+        ccomp_timer_start(); //FIXME remove timer
 
         do_retransmit(sock);
 
@@ -272,16 +259,6 @@ CLEAN_UP:
 
 
 void app_main(void) {
-
-    // set_user_state("teste", CONNECTED);
-    // user_state_hash_t* us = get_user_state("teste");
-    // // ESP_LOGI(TAG, "User %s", us);
-
-    // ESP_LOGI(TAG, "User with id: %s with state %d", us->user_id, (int)us->state);
-    // set_user_state("teste", DISCONNECTED);
-    // ESP_LOGI(TAG, "User with id: %s with state %d", us->user_id, (int)us->state);
-
-
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());

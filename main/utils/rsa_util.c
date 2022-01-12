@@ -11,6 +11,7 @@
 
 static const char TAG[] = "RSA_UTIL";
 
+// TODO remove hardcoded private key
 static const char privkey_2048_buf[] = "-----BEGIN RSA PRIVATE KEY-----\r\n"
 "MIIEpAIBAAKCAQEAl4iRt8ORglI2tv0U3Dp23Zyoc4bY0l414bNCK6TN1AXKXx6i\r\n"
 "QaiugnsFK84BhVtd6uNX/hMxsat+aZoJvPdMaY48U1DgAqBtFhSbXakyfghdk6VD\r\n"
