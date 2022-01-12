@@ -19,7 +19,7 @@ Set following parameters under Example Configuration Options:
 
 * Set `TCP keep-alive packet retry send counts` value of TCP keep alive packet retry send counts. This is the number of retries of the keepalive probe packet.
 
-Configure Wi-Fi or Ethernet under "Example Connection Configuration" menu. See "Establishing Wi-Fi or Ethernet Connection" section in [examples/protocols/README.md](../../README.md) for more details.
+Configure Wi-Fi or Ethernet under "Example Connection Configuration" menu.
 
 ## Build and Flash
 
@@ -30,5 +30,3 @@ idf.py -p PORT flash monitor
 ```
 
 (To exit the serial monitor, type ``Ctrl-]``.)
-
-See the Getting Started Guide for full steps to configure and use ESP-IDF to build projects.
