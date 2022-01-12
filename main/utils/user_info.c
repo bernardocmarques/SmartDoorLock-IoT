@@ -35,7 +35,7 @@ uint8_t* generate_random_seed(char* user_ip) {
     return user_info->seed;
 }
 
-void set_AES_ctx(char* user_ip, esp_aes_context* AES_ctx_pt) {
+void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx) {
     user_info_hash_t* user_info;
 
     HASH_FIND_INT(users_info, user_ip, user_info);
@@ -46,7 +46,7 @@ void set_AES_ctx(char* user_ip, esp_aes_context* AES_ctx_pt) {
         HASH_ADD_INT(users_info, user_ip, user_info);  /* id: name of key field */
     }
 
-    users_info->AES_ctx_pt = AES_ctx_pt;
+    users_info->AES_ctx = AES_ctx;
 }
 
 
@@ -74,11 +74,11 @@ uint8_t* get_user_seed(char* user_ip) {
     return user_info->seed;
 }
 
-esp_aes_context* get_user_AES_ctx_pt(char* user_ip) {
+esp_aes_context get_user_AES_ctx(char* user_ip) {
     user_info_hash_t* user_info;
 
     HASH_FIND_INT(users_info, user_ip, user_info);
-    return user_info->AES_ctx_pt;
+    return user_info->AES_ctx;
 }
 
 

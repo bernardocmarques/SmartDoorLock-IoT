@@ -6,7 +6,7 @@
 #include "aes_util.h"
 
 
-typedef enum {
+typedef enum {  // order of permitions. 3 is higher than 2, AUTHORIZED is higher than CONNECTED
     DISCONNECTED = 0,
     CONNECTING = 1,
     CONNECTED = 2,
@@ -17,7 +17,7 @@ typedef struct {
     char user_ip[45];
     user_state_t state;   
     uint8_t* seed;   
-    esp_aes_context* AES_ctx_pt;
+    esp_aes_context AES_ctx;
     UT_hash_handle hh;
 } user_info_hash_t;
 
@@ -26,7 +26,7 @@ typedef struct {
 
 void set_user_state(char* user_ip, user_state_t state);
 uint8_t* generate_random_seed(char* user_ip);
-void set_AES_ctx(char* user_ip, esp_aes_context* AES_ctx_pt);
+void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx);
 
 
 
@@ -35,7 +35,7 @@ void set_AES_ctx(char* user_ip, esp_aes_context* AES_ctx_pt);
 user_info_hash_t* get_user_info(char* user_ip);
 user_state_t get_user_state(char* user_ip);
 uint8_t* get_user_seed(char* user_ip);
-esp_aes_context* get_user_AES_ctx_pt(char* user_ip);
+esp_aes_context get_user_AES_ctx(char* user_ip);
 
 
 

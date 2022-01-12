@@ -82,7 +82,7 @@ int retrieve_session_credentials(char* cred_enc) {
 
     esp_aes_context aes = init_AES(key_256);
     AES_ctx = init_AES(key_256);
-    set_AES_ctx(addr_str, &aes);
+    set_AES_ctx(addr_str, aes);
     set_user_state(addr_str, CONNECTED);
 
     return 1;
@@ -108,8 +108,8 @@ static void do_retransmit(const int sock) {
             ESP_LOGI(TAG, "Received %d bytes: %s", len, rx_buffer);
 
             user_state_t state = get_user_state(addr_str);
-            esp_aes_context* aes_pt = NULL;
-            aes_pt = get_user_AES_ctx_pt(addr_str);
+            esp_aes_context aes;
+            aes = get_user_AES_ctx(addr_str);
 
             char* response;
             if (state == CONNECTING) {
@@ -128,16 +128,17 @@ static void do_retransmit(const int sock) {
                     sprintf(response, "RAC %s", seed_base64);
 
                     ESP_LOGE(TAG, "Time to get credentials: %ld", (long) ccomp_timer_stop()); //FIXME remove
+                    ccomp_timer_start(); //FIXME remove
 
-                    aes_pt = get_user_AES_ctx_pt(addr_str);
+                    aes = get_user_AES_ctx(addr_str);
                 } else {
                     ESP_LOGE(TAG, "Disconnected by server! (Error getting session key)");
                     disconnect_sock(sock);
                     return;
                 }
-            } else if (state == CONNECTED) {
-                aes_pt = get_user_AES_ctx_pt(addr_str);
-                char* cmd = decrypt_base64_AES(AES_ctx, rx_buffer);
+            } else if (state >= CONNECTED) { // Connected or Authorized
+                aes = get_user_AES_ctx(addr_str);
+                char* cmd = decrypt_base64_AES(aes, rx_buffer);
                 ESP_LOGI(TAG, "After Dec: %s", cmd);
                 response = checkCommand(cmd, addr_str);
             } else {
@@ -147,7 +148,7 @@ static void do_retransmit(const int sock) {
             }
 
 
-            char* response_enc = encrypt_str_AES(AES_ctx, response);
+            char* response_enc = encrypt_str_AES(aes, response);
             len = strlen(response_enc);
 
 

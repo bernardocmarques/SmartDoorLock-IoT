@@ -5,7 +5,7 @@
 #include "utils/authorization.h"
 #include "utils/utils.h"
 #include "utils/user_info.h"
-
+#include "ccomp_timer.h" //FIXME remove
 #define SEP " "
 
 static char* getCommand(char* str) {
@@ -56,22 +56,23 @@ static char* checkCommand(char* cmd, char* user_ip) {
         char* auth_code = args[1];
         uint8_t* auth_seed = get_user_seed(user_ip);
         int is_valid = check_authorization_code(user_id, auth_code, auth_seed);
-
+        if (is_valid) set_user_state(user_ip, AUTHORIZED);
         free(c);
         free_args(args, 2);
 
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "RUD") == 0) {
-        // char** args =  getArgs(cmd, 2);
-        // char* user_id = args[0];
-        // char* auth_code = args[1];
+        free(c);
+        ESP_LOGI("Handler", "Door unlocked!"); //FIXME remove
 
-        // int is_valid = check_authorization_code(user_id, auth_code, auth_seed);
-
-        // free(c);
-        // free_args(args, 2);
-
-        // return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
+        if (get_user_state(user_ip) == AUTHORIZED) {
+            ESP_LOGI("Handler", "Door unlocked!"); //FIXME remove
+            ESP_LOGE("Handler", "After unlock: %ld", (long) ccomp_timer_stop()); //FIXME remove
+            
+            return ACK_MESSAGE;
+        } else {
+            return NAK_MESSAGE;
+        }
     } else {
         return NAK_MESSAGE;
     }
