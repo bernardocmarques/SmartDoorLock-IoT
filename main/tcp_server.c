@@ -43,6 +43,7 @@
 #define KEEPALIVE_COUNT             CONFIG_EXAMPLE_KEEPALIVE_COUNT
 
 static const char *TAG = "example";
+static long t1 = 0; //TODO remove timer
 
 char addr_str[45];
 
@@ -113,8 +114,8 @@ static void do_retransmit(const int sock) {
 
 
                     sprintf(response, "RAC %s", seed_base64);
-
-                    ESP_LOGE(TAG, "Time to get credentials: %ld", (long) ccomp_timer_stop()); //FIXME remove
+                    t1 = (long) ccomp_timer_stop(); //FIXME remove
+                    ESP_LOGE(TAG, "Time to get credentials: %ld", t1); //FIXME remove
                     ccomp_timer_start(); //FIXME remove
 
                     aes = get_user_AES_ctx(addr_str);
@@ -127,7 +128,7 @@ static void do_retransmit(const int sock) {
                 aes = get_user_AES_ctx(addr_str);
                 char* cmd = decrypt_base64_AES(aes, rx_buffer);
                 ESP_LOGI(TAG, "After Dec: %s", cmd);
-                response = checkCommand(cmd, addr_str);
+                response = checkCommand(cmd, addr_str, t1); // FIXME remove t1 after
             } else {
                 ESP_LOGE(TAG, "Disconnected by server! (Not CONNECTED)");
                 disconnect_sock(sock);

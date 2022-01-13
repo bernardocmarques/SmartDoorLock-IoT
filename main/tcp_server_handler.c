@@ -44,7 +44,7 @@ static void free_args(char** args, int n) {
     free(args);
 }
 
-static char* checkCommand(char* cmd, char* user_ip) {
+static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1 after testing
 
     ESP_LOGI("example", "Received cmd %s", cmd);
 
@@ -63,12 +63,34 @@ static char* checkCommand(char* cmd, char* user_ip) {
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "RUD") == 0) {
         free(c);
-        ESP_LOGI("Handler", "Door unlocked!"); //FIXME remove
 
         if (get_user_state(user_ip) == AUTHORIZED) {
             ESP_LOGI("Handler", "Door unlocked!"); //FIXME remove
-            ESP_LOGE("Handler", "After unlock: %ld", (long) ccomp_timer_stop()); //FIXME remove
-            
+            long t2 = (long) ccomp_timer_stop(); //FIXME remove
+            ESP_LOGE("Handler", "After unlock: %ld", t2); //FIXME remove
+
+            char* response = malloc(sizeof(char) * 18);       
+            // char response[17]; //FIXME remove
+            sprintf(response, "ACK %ld %ld", t1, t2); //FIXME remove
+            return (char *)response; //FIXME remove
+
+            return ACK_MESSAGE;
+        } else {
+            return NAK_MESSAGE;
+        }
+    } else if (strcmp(c, "RLD") == 0) {
+        free(c);
+
+        if (get_user_state(user_ip) == AUTHORIZED) {
+            ESP_LOGI("Handler", "Door locked!"); //FIXME remove
+            long t2 = (long) ccomp_timer_stop(); //FIXME remove
+            ESP_LOGE("Handler", "After lock: %ld", t2); //FIXME remove
+
+            char* response = malloc(sizeof(char) * 18);       
+            // char response[17]; //FIXME remove
+            sprintf(response, "ACK %ld %ld", t1, t2); //FIXME remove
+            return (char *)response; //FIXME remove
+
             return ACK_MESSAGE;
         } else {
             return NAK_MESSAGE;
