@@ -1,3 +1,4 @@
+#include <sys/cdefs.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,7 +21,22 @@ static const char *TAG_BLE = "BLE_SERVER";
 #define BUF_SIZE (1024)
 
 
-static void echo_task(void *arg) {
+int sendData(const char* data) {
+    const size_t len = strlen(data);
+    const int txBytes = uart_write_bytes(ECHO_UART_PORT_NUM, data, len);
+
+    return txBytes;
+}
+
+void disconnect() {
+    unsigned char DISC[9]  = {0x41, 0x54, 0x2b, 0x44, 0x49, 0x53, 0x43, 0xd, 0xa};
+    gpio_set_level(GPIO_NUM_7, GPIO_INTR_LOW_LEVEL);
+    uart_write_bytes(ECHO_UART_PORT_NUM, DISC, 9);
+    gpio_set_level(GPIO_NUM_7, GPIO_INTR_HIGH_LEVEL);
+}
+
+
+_Noreturn static void echo_task(void *arg) {
     ESP_LOGI(TAG_BLE, "task begin");
 
     /* Configure parameters of an UART driver,
@@ -30,7 +46,7 @@ static void echo_task(void *arg) {
         .data_bits = UART_DATA_8_BITS,
         .parity    = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_CTS_RTS,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .source_clk = UART_SCLK_APB,
     };
     int intr_alloc_flags = 0;
@@ -45,19 +61,28 @@ static void echo_task(void *arg) {
 
     // Configure a temporary buffer for the incoming data
     uint8_t *data = (uint8_t *) malloc(BUF_SIZE);
+    char* response = (char *) malloc(BUF_SIZE);
 
     ESP_LOGI(TAG_BLE, "Before while");
     while (1) {
         // Read data from the UART
         int len = uart_read_bytes(ECHO_UART_PORT_NUM, data, (BUF_SIZE - 1), 20 / portTICK_RATE_MS);
         // Write data back to the UART
-        uart_write_bytes(ECHO_UART_PORT_NUM, (const char *) data, len);
+//        uart_write_bytes(ECHO_UART_PORT_NUM, (const char *) data, len);
         if (len) {
+            print_array(data, len);
             data[len] = '\0';
             ESP_LOGI(TAG_BLE, "Recv str: %s", (char *) data);
+
+            sprintf(response, "DATA-> %s", (char *) data);
+
+            sendData((char *) data);
+            disconnect();
         }
     }
 }
+
+
 
 void app_main_ble(void) {
     ESP_LOGI(TAG_BLE, "Reach main");
