@@ -263,23 +263,23 @@ CLEAN_UP:
 void app_main(void) {
     ESP_LOGI(TAG_BLE, "Reach main parent");
 
-    app_main_ble();
-    // ESP_LOGI(TAG_BLE, "passes main parent");
+//    app_main_ble();
+     ESP_LOGI(TAG_BLE, "passes main parent");
 
-//     ESP_ERROR_CHECK(nvs_flash_init());
-//     ESP_ERROR_CHECK(esp_netif_init());
-//     ESP_ERROR_CHECK(esp_event_loop_create_default());
+     ESP_ERROR_CHECK(nvs_flash_init());
+     ESP_ERROR_CHECK(esp_netif_init());
+     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-//     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-//      * Read "Establishing Wi-Fi or Ethernet Connection" section in
-//      * examples/protocols/README.md for more information about this function.
-//      */
-//     ESP_ERROR_CHECK(example_connect());
+     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
+      * Read "Establishing Wi-Fi or Ethernet Connection" section in
+      * examples/protocols/README.md for more information about this function.
+      */
+     ESP_ERROR_CHECK(example_connect());
 
-// #ifdef CONFIG_EXAMPLE_IPV4
-//     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
-// #endif
-// #ifdef CONFIG_EXAMPLE_IPV6
-//     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
-// #endif
+ #ifdef CONFIG_EXAMPLE_IPV4
+     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
+ #endif
+ #ifdef CONFIG_EXAMPLE_IPV6
+     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
+ #endif
 }

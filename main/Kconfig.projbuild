@@ -84,3 +84,4 @@ menu "BLE Server Configuration"
             Defines stack size for UART echo example. Insufficient stack size can cause crash.
 
 endmenu
+
