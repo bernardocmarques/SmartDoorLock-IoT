@@ -10,13 +10,21 @@ static led_strip_t *pStrip_a;
 int led_configured = 0;
 
 
+const int red[3] = {25,0,0};
+const int green[3] = {0,25,0};
+const int blue[3] = {0,0,25};
+const int yellow[3] = {25,25,0};
+int color_from_status[3][3]  = {{25,25,0}, {0,0,25}, {0,25,0}};
+
+
 static void configure_led() {
     char* TAG = "LEE Configuration";
     ESP_LOGI(TAG, "Example configured to blink addressable LED!");
     /* LED strip initialization with the GPIO and pixels number*/
-    pStrip_a = led_strip_init(0, 18, 1);
+    pStrip_a = led_strip_init(1, 18, 1);
     /* Set all LED off to clear all pixels */
     pStrip_a->clear(pStrip_a, 50);
+    ESP_LOGI(TAG, "LED config done");
 }
 
 static void change_led_color(int rgb[3]) {

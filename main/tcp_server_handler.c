@@ -5,7 +5,7 @@
 #include "utils/authorization.h"
 #include "utils/utils.h"
 #include "utils/user_info.h"
-#include "ccomp_timer.h" //FIXME remove
+#include "utils/lock_status.h"
 #define SEP " "
 
 static char* getCommand(char* str) {
@@ -63,17 +63,8 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "RUD") == 0) {
         free(c);
-
         if (get_user_state(user_ip) == AUTHORIZED) {
-            ESP_LOGI("Handler", "Door unlocked!"); //FIXME remove
-            long t2 = (long) ccomp_timer_stop(); //FIXME remove
-            ESP_LOGE("Handler", "After unlock: %ld", t2); //FIXME remove
-
-            char* response = malloc(sizeof(char) * 18);       
-            // char response[17]; //FIXME remove
-            sprintf(response, "ACK %ld %ld", t1, t2); //FIXME remove
-            return (char *)response; //FIXME remove
-
+            unlock_lock();
             return ACK_MESSAGE;
         } else {
             return NAK_MESSAGE;
@@ -82,15 +73,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free(c);
 
         if (get_user_state(user_ip) == AUTHORIZED) {
-            ESP_LOGI("Handler", "Door locked!"); //FIXME remove
-            long t2 = (long) ccomp_timer_stop(); //FIXME remove
-            ESP_LOGE("Handler", "After lock: %ld", t2); //FIXME remove
-
-            char* response = malloc(sizeof(char) * 18);       
-            // char response[17]; //FIXME remove
-            sprintf(response, "ACK %ld %ld", t1, t2); //FIXME remove
-            return (char *)response; //FIXME remove
-
+            lock_lock();
             return ACK_MESSAGE;
         } else {
             return NAK_MESSAGE;
