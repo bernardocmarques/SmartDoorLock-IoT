@@ -9,7 +9,7 @@
 #define SEP " "
 
 static char* getCommand(char* str) {
-    char* cmd = malloc(sizeof(char) * strlen(str));
+    char* cmd = malloc(sizeof(char) * strlen(str)+1);
     strcpy(cmd, str);
     char *pt;
     pt = strtok(cmd, SEP);
@@ -18,16 +18,19 @@ static char* getCommand(char* str) {
 
 
 static char** getArgs(char* str, int n) {
-    char* cmd = malloc(sizeof(char) * strlen(str));
+    heap_caps_check_integrity_all(true);
+    char* cmd = malloc(sizeof(char) * strlen(str)+1);
     strcpy(cmd, str);
+    heap_caps_check_integrity_all(true);
     char** args = (char**)malloc(n * sizeof(char*));
+    heap_caps_check_integrity_all(true);
     char *pt;
 
     pt = strtok(cmd, SEP);
     if (pt != NULL) pt = strtok(NULL, SEP);
 
     int i = 0;
-    while (pt != NULL) {
+    while (pt != NULL && i<n) {
         args[i] = malloc(sizeof(char) * (strlen(pt)+1));
         strcpy(args[i++], pt);
         ESP_LOGI("example", "pt = %s", pt);
@@ -51,14 +54,14 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
     char* c = getCommand(cmd);
 
     if (strcmp(c, "SAC") == 0) {
-        char** args =  getArgs(cmd, 2);
+        char** args =  getArgs(cmd, 4);
         char* user_id = args[0];
         char* auth_code = args[1];
         uint8_t* auth_seed = get_user_seed(user_ip);
         int is_valid = check_authorization_code(user_id, auth_code, auth_seed);
         if (is_valid) set_user_state(user_ip, AUTHORIZED);
         free(c);
-        free_args(args, 2);
+        free_args(args, 4);
 
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "RUD") == 0) {

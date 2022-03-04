@@ -22,6 +22,7 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+#include <lwip/apps/sntp.h>
 
 #include "tcp_server_handler.c"
 #include "ble_server.c"
@@ -32,11 +33,13 @@
 #include "utils/nvs_util.h"
 #include "utils/authorization.h"
 #include "utils/user_info.h"
+#include "esp_sntp.h"
 
 #include "mbedtls/md.h" //FIXME remove
 
 
 #include "ccomp_timer.h" //FIXME remove
+#include "time_util.h"
 
 #define PORT                        CONFIG_EXAMPLE_PORT
 #define KEEPALIVE_IDLE              CONFIG_EXAMPLE_KEEPALIVE_IDLE
@@ -113,8 +116,11 @@ static void do_retransmit(const int sock) {
 
                     ESP_LOGI(TAG, "RAC %s", seed_base64); //FIXME remove
 
-
                     sprintf(response, "RAC %s", seed_base64);
+
+//                    free(auth_seed);
+//                    free(seed_base64);
+
                     t1 = (long) ccomp_timer_stop(); //FIXME remove
                     ESP_LOGE(TAG, "Time to get credentials: %ld", t1); //FIXME remove
                     ccomp_timer_start(); //FIXME remove
@@ -154,6 +160,7 @@ static void do_retransmit(const int sock) {
                 disconnect_sock(sock);
                 return;
             }
+
         }
     } while (len > 0);
 }
@@ -261,25 +268,28 @@ CLEAN_UP:
 
 
 void app_main(void) {
+
     ESP_LOGI(TAG_BLE, "Reach main parent");
 
 //    app_main_ble();
-     ESP_LOGI(TAG_BLE, "passes main parent");
+    ESP_LOGI(TAG_BLE, "passes main parent");
 
-     ESP_ERROR_CHECK(nvs_flash_init());
-     ESP_ERROR_CHECK(esp_netif_init());
-     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-      * Read "Establishing Wi-Fi or Ethernet Connection" section in
-      * examples/protocols/README.md for more information about this function.
-      */
-     ESP_ERROR_CHECK(example_connect());
+    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
+    * Read "Establishing Wi-Fi or Ethernet Connection" section in
+    * examples/protocols/README.md for more information about this function.
+    */
+    ESP_ERROR_CHECK(example_connect());
 
- #ifdef CONFIG_EXAMPLE_IPV4
+    obtain_time();
+    test();
+    #ifdef CONFIG_EXAMPLE_IPV4
      xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
- #endif
- #ifdef CONFIG_EXAMPLE_IPV6
+    #endif
+    #ifdef CONFIG_EXAMPLE_IPV6
      xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
- #endif
+    #endif
 }
