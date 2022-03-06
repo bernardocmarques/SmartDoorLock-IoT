@@ -6,7 +6,12 @@
 #include "utils/utils.h"
 #include "utils/user_info.h"
 #include "utils/lock_status.h"
+#include "utils/time_util.h"
+#include "utils/nonce.h"
 #define SEP " "
+
+#define ERROR_VERIFYING_TIMESTAMP_AND_NONCE "Message denied due to invalid timestamp or nonce!"
+#define ERROR_FEW_ARGUMENTS "Message expecting %d arguments but only got %d!"
 
 static char* getCommand(char* str) {
     char* cmd = malloc(sizeof(char) * strlen(str)+1);
@@ -14,6 +19,22 @@ static char* getCommand(char* str) {
     char *pt;
     pt = strtok(cmd, SEP);
     return pt;
+}
+
+bool verifyTimestampsAndNonce(char** args, int first_args_n) {
+    int ts1 = strtol(args[first_args_n + 0], NULL, 10);
+    int ts2 = strtol(args[first_args_n + 1], NULL, 10);
+    long nonce = strtol(args[first_args_n + 2], NULL, 10);
+
+    int now_ts = getNowTimestamp();
+
+    bool valid = ts1 <= now_ts && ts2 >= now_ts && checkNonce(nonce);
+
+    if (valid) {
+        addNonceSorted(nonce, ts2 + 10);
+    }
+
+    return valid;
 }
 
 
@@ -37,6 +58,16 @@ static char** getArgs(char* str, int n) {
         pt = strtok(NULL, SEP);
     }
 
+    if (i < n) {
+        int a = i;
+        while (i--) {
+            free(args[i-1]);
+        }
+        free(args);
+        ESP_LOGE("ERROR", ERROR_FEW_ARGUMENTS, n, a);
+        return NULL;
+    }
+
     return args;
 }
 
@@ -54,33 +85,71 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
     char* c = getCommand(cmd);
 
     if (strcmp(c, "SAC") == 0) {
-        char** args =  getArgs(cmd, 4);
+        char** args =  getArgs(cmd, 5);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
         char* user_id = args[0];
         char* auth_code = args[1];
-        uint8_t* auth_seed = get_user_seed(user_ip);
-        int is_valid = check_authorization_code(user_id, auth_code, auth_seed);
-        if (is_valid) set_user_state(user_ip, AUTHORIZED);
+
+
+        int is_valid = 0;
+        if (verifyTimestampsAndNonce(args, 2)) {
+            uint8_t* auth_seed = get_user_seed(user_ip);
+            is_valid = check_authorization_code(user_id, auth_code, auth_seed);
+            if (is_valid) set_user_state(user_ip, AUTHORIZED);
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+        }
+
         free(c);
-        free_args(args, 4);
+        free_args(args, 5);
 
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "RUD") == 0) {
-        free(c);
-        if (get_user_state(user_ip) == AUTHORIZED) {
-            unlock_lock();
-            return ACK_MESSAGE;
-        } else {
-            return NAK_MESSAGE;
-        }
-    } else if (strcmp(c, "RLD") == 0) {
-        free(c);
+        char **args = getArgs(cmd, 3);
 
-        if (get_user_state(user_ip) == AUTHORIZED) {
-            lock_lock();
-            return ACK_MESSAGE;
-        } else {
+        if (args == NULL) {
+            free(c);
             return NAK_MESSAGE;
         }
+
+        bool ack = false;
+        if (verifyTimestampsAndNonce(args, 0)) {
+            if (get_user_state(user_ip) == AUTHORIZED) {
+                unlock_lock();
+                ack = true;
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+        }
+        free_args(args, 3);
+        free(c);
+        return ack ? ACK_MESSAGE : NAK_MESSAGE;
+    } else if (strcmp(c, "RLD") == 0) {
+        char **args = getArgs(cmd, 3);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
+        bool ack = false;
+        if (verifyTimestampsAndNonce(args, 0)) {
+            if (get_user_state(user_ip) == AUTHORIZED) {
+                lock_lock();
+                ack = true;
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+
+        }
+        free_args(args, 3);
+        free(c);
+        return ack ? ACK_MESSAGE : NAK_MESSAGE;
     } else {
         return NAK_MESSAGE;
     }

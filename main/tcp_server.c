@@ -285,7 +285,6 @@ void app_main(void) {
     ESP_ERROR_CHECK(example_connect());
 
     obtain_time();
-    test();
     #ifdef CONFIG_EXAMPLE_IPV4
      xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
     #endif
