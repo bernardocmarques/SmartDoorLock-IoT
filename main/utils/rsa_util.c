@@ -9,7 +9,8 @@
 #include "rsa_util.h"
 #include "mbedtls/entropy_poll.h"
 
-static const char TAG[] = "RSA_UTIL";
+
+const char TAG[] = "RSA_UTIL";
 
 // TODO remove hardcoded private key
 static const char privkey_2048_buf[] = "-----BEGIN RSA PRIVATE KEY-----\r\n"
@@ -146,7 +147,7 @@ RSA_Decrypted* decrypt_RSA(uint8_t* chipertext) {
 }
 
 char* decrypt_base64_RSA(char* chipertext_base64) {
-    int base64_size = strlen(chipertext_base64);
+    size_t base64_size = strlen(chipertext_base64);
 
     size_t size;
     uint8_t* chipertext = base64_decode(chipertext_base64, base64_size, &size);

@@ -8,6 +8,8 @@
 #include "utils/lock_status.h"
 #include "utils/time_util.h"
 #include "utils/nonce.h"
+#include "pushingbox_util.h"
+
 #define SEP " "
 
 #define ERROR_VERIFYING_TIMESTAMP_AND_NONCE "Message denied due to invalid timestamp or nonce!"
@@ -148,6 +150,27 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
 
         }
         free_args(args, 3);
+        free(c);
+        return ack ? ACK_MESSAGE : NAK_MESSAGE;
+    } else if (strcmp(c, "SNT") == 0) {
+        char **args = getArgs(cmd, 4);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
+        bool ack = false;
+        if (verifyTimestampsAndNonce(args, 1)) {
+            if (get_user_state(user_ip) == AUTHORIZED) {
+                send_notification(args[0]);
+                ack = true;
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+
+        }
+        free_args(args, 4);
         free(c);
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
     } else {

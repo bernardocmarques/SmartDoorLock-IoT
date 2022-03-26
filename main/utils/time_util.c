@@ -62,7 +62,7 @@ int getNowTimestamp() {
     return (int) now;
 }
 
-void test(void)
+void test_time(void)
 {
     time_t now;
     struct tm timeinfo;
