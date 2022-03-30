@@ -82,7 +82,7 @@ static void free_args(char** args, int n) {
 
 static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1 after testing
 
-    ESP_LOGI("example", "Received cmd %s", cmd);
+    ESP_LOGW("example", "Received cmd %s", cmd);
 
     char* c = getCommand(cmd);
 

@@ -1,7 +1,11 @@
+#include <esp_log.h>
 #include "uthash.h"
 #include "user_info.h"
+#define TAG "USER_INFO"
+
 
 user_info_hash_t* users_info = NULL;
+
 
 
 /* Setters */
@@ -17,7 +21,7 @@ void set_user_state(char* user_ip, user_state_t state) {
         HASH_ADD_INT(users_info, user_ip, user_info);  /* id: name of key field */
     }
 
-    users_info->state = state;
+    user_info->state = state;
 }
 
 uint8_t* generate_random_seed(char* user_ip) {
@@ -46,7 +50,7 @@ void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx) {
         HASH_ADD_INT(users_info, user_ip, user_info);  /* id: name of key field */
     }
 
-    users_info->AES_ctx = AES_ctx;
+    user_info->AES_ctx = AES_ctx;
 }
 
 

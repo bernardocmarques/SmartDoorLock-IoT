@@ -52,43 +52,20 @@ static long t1 = 0; //TODO remove timer
 
 char addr_str[45];
 
-int retrieve_session_credentials_old(char* cred_enc) {
-    uint8_t* key_256;
-    ESP_LOGI(TAG_TCP, "Cred Enc %s", cred_enc);
-    
-    char* cred = decrypt_base64_RSA(cred_enc);
-    ESP_LOGI(TAG_TCP, "cred %s", cred);
-
-    char* sep = " ";
-
-    char *pt;
-    size_t size;
-    int base64_size;
-
-    pt = strtok(cred, sep);
-
-    if (strcmp(pt, "SSC") != 0) return 0;
-
-    pt = strtok (NULL, sep);
-    base64_size = strlen(pt);
-    key_256 = base64_decode(pt, base64_size, &size);
-
-
-    esp_aes_context aes = init_AES(key_256);
-    set_AES_ctx(addr_str, aes);
-    set_user_state(addr_str, CONNECTED);
-
-    return 1;
-}
+void createTaskBLE();
 
 static void disconnect_sock(const int sock) {
+//    createTaskBLE();
     set_user_state(addr_str, DISCONNECTED);
+    free_AES(get_user_AES_ctx(addr_str));
     close(sock);
 }
 
 static void do_retransmit(const int sock) {
     int len;
     char rx_buffer[512];
+
+//    vTaskDelete(bleTask); // fixme maybe suspend anyway
 
     do {
         len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
@@ -115,16 +92,16 @@ static void do_retransmit(const int sock) {
 
                     response = malloc((sizeof(char) * 5) + base64_size);
 
-                    ESP_LOGI(TAG_TCP, "RAC %s", seed_base64); //FIXME remove
+//                    ESP_LOGI(TAG_TCP, "RAC %s", seed_base64); //FIXME remove
 
                     sprintf(response, "RAC %s", seed_base64);
 
 //                    free(auth_seed);
 //                    free(seed_base64);
 
-                    t1 = (long) ccomp_timer_stop(); //FIXME remove
-                    ESP_LOGE(TAG_TCP, "Time to get credentials: %ld", t1); //FIXME remove
-                    ccomp_timer_start(); //FIXME remove
+//                    t1 = (long) ccomp_timer_stop(); //FIXME remove
+//                    ESP_LOGE(TAG_TCP, "Time to get credentials: %ld", t1); //FIXME remove
+//                    ccomp_timer_start(); //FIXME remove
 
                     aes = get_user_AES_ctx(addr_str);
                 } else {
@@ -156,6 +133,7 @@ static void do_retransmit(const int sock) {
                 }
                 to_write -= written;
             }
+            ESP_LOGI(TAG_TCP, "Wrote %d bytes: %s", len, response_enc);
 
             if (strcmp(response, NAK_MESSAGE) == 0) {
                 disconnect_sock(sock);
@@ -270,7 +248,7 @@ CLEAN_UP:
 
 void tcp_main(void) {
     #ifdef CONFIG_EXAMPLE_IPV4
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
+    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, &tcpTask);
     #endif
     #ifdef CONFIG_EXAMPLE_IPV6
      xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);

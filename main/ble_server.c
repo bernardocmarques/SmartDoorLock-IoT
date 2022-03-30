@@ -21,7 +21,7 @@
 
 const char TAG_BLE[] = "BLE_SERVER";
 
-#define BUF_SIZE (1024)
+#define BUF_SIZE (512)
 
 char* ble_user = "BLE_USER";
 
@@ -63,8 +63,8 @@ static void echo_task(void *arg) {
     char* data = (char *) malloc(BUF_SIZE);
     char* response;
 
-    set_user_state(ble_user, CONNECTING);
 
+    ESP_LOGI(TAG_BLE, "Server BLE running!");
 
     while (1) {
         // Read data from the UART
@@ -73,24 +73,22 @@ static void echo_task(void *arg) {
         if (len) {
             data[len] = '\0';
             if (strncmp("AT+", (char *) data, 3) == 0 || strncmp("+", (char *) data, 1) == 0) {
+                ESP_LOGI(TAG_BLE, "Received AT cmd: %s", data);
+                if (strncmp("+CONNECTED", (char *) data, 10) == 0) {
+                    set_user_state(ble_user, CONNECTING);
+
+                } else if (strncmp("+DISCONNECT", (char *) data, 13) == 0) {
+                    set_user_state(ble_user, DISCONNECTED);
+                }
+
                 continue;
             }
             ESP_LOGI(TAG_BLE, "Received %d bytes: %s", len, data);
 
-//            user_state_t state = get_user_state(addr_str);
-//            esp_aes_context aes;
-//            aes = get_user_AES_ctx(addr_str);
-//            if (retrieve_session_credentials((char *) data, "teste")) {
-//                ESP_LOGI(TAG_BLE, "Got key!");
-//                sendData("ok");
-////                disconnect();
-//                continue;
-//            }
-//            disconnect();
-
             user_state_t state = get_user_state(ble_user);
             esp_aes_context aes;
             aes = get_user_AES_ctx(ble_user);
+
 
             if (state == CONNECTING) {
                 if (retrieve_session_credentials(data, ble_user)) {
@@ -153,14 +151,25 @@ static void echo_task(void *arg) {
 
 
         }
+//        ESP_LOGE(TAG_BLE, "BLE Running...");
+//        sleep(1);
     }
 }
 
 
+void createTaskBLE() {
+    xTaskCreate(echo_task, "uart_echo_task", ECHO_TASK_STACK_SIZE, (void*)NULL, 10, &bleTask);
+}
 
+void stupid() {
+    while (1) {
+        ESP_LOGE(TAG_BLE, "running...");
+        sleep(1);
+    }
+}
 
 void ble_main(void) {
     init();
-    xTaskCreate(echo_task, "uart_echo_task", ECHO_TASK_STACK_SIZE, (void*)NULL, 10, NULL);
-//    xTaskCreate(echo_task, "uart_echo_task", ECHO_TASK_STACK_SIZE, (void*)NULL, 10, &bleTask);
+    createTaskBLE();
+//        xTaskCreate(stupid, "uart_echo_task", ECHO_TASK_STACK_SIZE, (void*)NULL, 10, &bleTask);
 }

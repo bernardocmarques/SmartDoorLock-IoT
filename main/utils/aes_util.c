@@ -7,13 +7,15 @@
 #include "aes_util.h"
 #include "base64.h"
 #include "esp_system.h"
+#include "utils.h"
 
 static const char *TAG = "AES_UTIL";
 
 uint8_t* get_random_iv() {
-    uint8_t* iv = (uint8_t*) malloc(sizeof(uint8_t) * IV_SIZE);
-    // esp_fill_random(&iv, sizeof(uint8_t) * IV_SIZE);
-    iv = memset(iv, 'A',sizeof(uint8_t) * IV_SIZE );
+//    uint8_t* iv = (uint8_t*) malloc(sizeof(uint8_t) * IV_SIZE);
+//    // esp_fill_random(&iv, sizeof(uint8_t) * IV_SIZE);
+//    iv = memset(iv, 'A',sizeof(uint8_t) * IV_SIZE );
+    uint8_t* iv = get_random_array(IV_SIZE);
     return iv;
 }
 
@@ -51,7 +53,7 @@ AES_Encrypted* encrypt_AES(esp_aes_context ctx, uint8_t* plaintext, int size) {
     PKCS7_Padding* paddingResult;
     AES_Encrypted* aes_encrypted = (AES_Encrypted*) malloc(sizeof(AES_Encrypted));
 
-    paddingResult = addPadding(plaintext, size, BLOCK_SIZE);
+    paddingResult = addPadding(plaintext, size, PADDING_BLOCK_SIZE);
 
     uint8_t* chipertext = (uint8_t *) malloc(sizeof(uint8_t) * paddingResult->dataLengthWithPadding);
 
@@ -105,9 +107,9 @@ char* encrypt_str_AES(esp_aes_context ctx, char* plaintext_str) {
     // encrypted_and_iv_base64[(int)(base64_size/sizeof(char))] = ' ';
     // strcat(encrypted_and_iv_base64, iv_base64);
 
-    // free(encrypted_base64);
-    // free(iv_base64);
-    // free_AES_Encrypted(aes_encrypted);
+     free(encrypted_base64);
+     free(iv_base64);
+     free_AES_Encrypted(aes_encrypted);
 
 
     return encrypted_and_iv_base64;
@@ -123,16 +125,19 @@ char* decrypt_base64_AES(esp_aes_context ctx, char* chipertext_and_iv_base64) {
     int iv_base64_size;
 
     pt = strtok(chipertext_and_iv_base64, sep);
-    char*chipertext_base64 = pt; //FIXME maybe copy
+//    char* chipertext_base64 = pt; //FIXME maybe copy
+
+    char* chipertext_base64 = malloc(sizeof(char) * strlen(pt));
+    strcpy(chipertext_base64, pt);
 
     size_t size_iv;
     pt = strtok (NULL, sep);
-    iv_base64_size = strlen(pt);
+    iv_base64_size = (int)(strlen(pt)/sizeof(char));
     uint8_t* iv = base64_decode(pt, iv_base64_size, &size_iv);
 
 
 
-    int base64_size = strlen(chipertext_base64);
+    int base64_size = (int)(strlen(chipertext_base64)/sizeof(char));
 
     size_t size;
     uint8_t* chipertext = base64_decode(chipertext_base64, base64_size, &size);

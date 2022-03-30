@@ -13,7 +13,6 @@
 
 const static char* TAG = "MAIN";
 
-
 void app_main(void) {
 
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -28,6 +27,7 @@ void app_main(void) {
     obtain_time();
 
     tcp_main();
+//    restart_esp(3); // fixme remove
 
     ble_main();
     

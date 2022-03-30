@@ -16,7 +16,7 @@ typedef struct {
 
 #define KEY_SIZE_BITS 256
 #define KEY_SIZE_BYTES KEY_SIZE_BITS/8
-#define BLOCK_SIZE AES_256_KEY_BYTES
+#define PADDING_BLOCK_SIZE 16 // padding block size
 #define IV_SIZE 16
 
 void print_array(uint8_t* a, int n);
