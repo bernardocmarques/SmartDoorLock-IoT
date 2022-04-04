@@ -13,6 +13,8 @@
 static TaskHandle_t tcpTask;
 static TaskHandle_t bleTask;
 
+static char* ble_user = "BLE_USER";
+
 
 void restart_esp(int delay_seconds);
 

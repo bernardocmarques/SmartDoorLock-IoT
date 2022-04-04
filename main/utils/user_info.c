@@ -53,6 +53,12 @@ void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx) {
     user_info->AES_ctx = AES_ctx;
 }
 
+void set_BLE_user_state_to_connecting() {
+    if (get_user_info(ble_user) != DISCONNECTED) {
+        set_user_state(ble_user, CONNECTING);
+    }
+}
+
 
 
 /* Getters */

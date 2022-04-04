@@ -130,6 +130,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         }
         free_args(args, 3);
         free(c);
+        set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "RLD") == 0) {
         char **args = getArgs(cmd, 3);
@@ -151,6 +152,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         }
         free_args(args, 3);
         free(c);
+        set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
     } else if (strcmp(c, "SNT") == 0) {
         char **args = getArgs(cmd, 4);
