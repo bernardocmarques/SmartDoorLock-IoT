@@ -6,6 +6,8 @@
 
 nonce_t* head = NULL;
 
+static const char TAG[] = "NONCE";
+
 void addNonceSorted(long nonce, int expires) {
     nonce_t* newNonce;
 
@@ -36,7 +38,7 @@ void addNonceSorted(long nonce, int expires) {
 }
 
 bool checkNonce(long nonce) {
-    int now_ts = getNowTimestamp();
+    long now_ts = (long) getNowTimestamp();
 
     if (head == NULL) {
         return true;
@@ -52,12 +54,13 @@ bool checkNonce(long nonce) {
         }
 
         if (temp->expires <= now_ts) {
-            free(head);
+            nonce_t* to_delete = head;
             head = temp->next;
+            temp = temp->next;
+            free(to_delete);
         } else {
             if (!valid) break;
         }
-        temp = temp->next;
     }
 
     return valid;

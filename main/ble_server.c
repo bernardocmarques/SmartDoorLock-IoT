@@ -44,6 +44,15 @@ void init(void) {
     set_user_state(ble_user, DISCONNECTED);
 }
 
+int sendATCmd(char* AT_cmd) {
+    size_t len = strlen(AT_cmd);
+
+    const int txBytes = uart_write_bytes(ECHO_UART_PORT_NUM, AT_cmd, len);
+    ESP_LOGI("Data Sent: ", "Wrote %d bytes -> %s", txBytes, AT_cmd);
+
+    return txBytes;
+}
+
 int sendData(char* data) {
     char EOT = '\4';
     strncat(data, &EOT, 1);
@@ -59,7 +68,7 @@ int sendData(char* data) {
 void disconnect() {
     set_user_state(ble_user, DISCONNECTED);
     vTaskDelay(100 / portTICK_PERIOD_MS);
-    sendData("AT+DISC\r\n");
+    sendATCmd("AT+DISC\r\n");
     vTaskDelay(100 / portTICK_PERIOD_MS);
 }
 
@@ -88,6 +97,10 @@ _Noreturn static void echo_task(void *arg) {
                 }
 
                 continue;
+            }
+
+            if (strncmp("-", (char *) data, 1) == 0) {
+                data[0] = '+'; // replace '-' with '+', this is used to prevent base64 string started with '+' to be handled as an AT command response
             }
             ESP_LOGI(TAG_BLE, "Received %d bytes: %s", len, data);
 
