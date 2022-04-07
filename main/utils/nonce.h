@@ -11,3 +11,5 @@ typedef struct Nonce {
 
 void addNonceSorted(long nonce, int expires);
 bool checkNonce(long nonce);
+
+char* addTimestampsAndNonceToMsg(char* msg);

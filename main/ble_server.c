@@ -77,7 +77,8 @@ _Noreturn static void echo_task(void *arg) {
     // Configure a temporary buffer for the incoming data
     char* data = (char *) malloc(BUF_SIZE);
     char* response;
-
+    char* response_enc;
+    char* response_ts;
 
     ESP_LOGI(TAG_BLE, "Server BLE running!");
 
@@ -145,33 +146,13 @@ _Noreturn static void echo_task(void *arg) {
             }
 
 
-            char* response_enc = encrypt_str_AES(aes, response);
 
+            response_ts = addTimestampsAndNonceToMsg(response);
+            response_enc = encrypt_str_AES(aes, response_ts);
+            len = (int)strlen(response_enc);
             sendData(response_enc);
-//            len = (int) strlen(response_enc);
-//
-//
-//            int to_write = len;
-//            while (to_write > 0) {
-//                int written = send(sock, response_enc + (len - to_write), to_write, 0);
-//                if (written < 0) {
-//                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-//                }
-//                to_write -= written;
-//            }
-
-//            if (strcmp(response, NAK_MESSAGE) == 0) {
-//                disconnect();
-//                break;
-//            }
-
-
-//            sprintf(response, "DATA-> %s", data);
-
-
         }
-//        ESP_LOGE(TAG_BLE, "BLE Running...");
-//        sleep(1);
+
     }
 }
 

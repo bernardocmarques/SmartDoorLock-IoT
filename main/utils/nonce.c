@@ -1,12 +1,15 @@
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 #include <esp_log.h>
 #include "nonce.h"
+#include "esp_system.h"
 
 
 nonce_t* head = NULL;
 
-static const char TAG[] = "NONCE";
+//static const char TAG[] = "NONCE";
+static const int ONE_SECOND_IN_MILLIS = 1000;
 
 void addNonceSorted(long nonce, int expires) {
     nonce_t* newNonce;
@@ -48,20 +51,41 @@ bool checkNonce(long nonce) {
 
     bool valid = temp->nonce != nonce;
     while (temp->next != NULL) {
-
+        ESP_LOGE("NONCE", "%ld", temp->nonce);
         if (temp->nonce == nonce) {
             valid = false;
         }
 
+        nonce_t* to_delete = NULL;
         if (temp->expires <= now_ts) {
-            nonce_t* to_delete = head;
+            to_delete = head;
             head = temp->next;
-            temp = temp->next;
-            free(to_delete);
+
         } else {
             if (!valid) break;
         }
+
+        temp = temp->next;
+        if (to_delete != NULL) free(to_delete);
     }
 
     return valid;
+}
+
+char* addTimestampsAndNonceToMsg(char* msg) {
+    char timestamp_str_1[15];
+    char timestamp_str_2[15];
+    char nonce_str[15];
+
+    long now_ts = (long) getNowTimestamp();
+
+    sprintf(timestamp_str_1, "%ld", now_ts - 30 * ONE_SECOND_IN_MILLIS);
+    sprintf(timestamp_str_2, "%ld", now_ts + 30 * ONE_SECOND_IN_MILLIS);
+    sprintf(nonce_str, "%u", esp_random());
+
+    char* result = (char*) malloc((strlen(msg) + strlen(timestamp_str_1) + strlen(timestamp_str_2) + strlen(nonce_str)) * sizeof(char));
+
+    sprintf(result, "%s %s %s %s", msg, timestamp_str_1, timestamp_str_2, nonce_str);
+
+    return result;
 }

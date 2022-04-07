@@ -121,8 +121,9 @@ static void do_retransmit(const int sock) {
             }
 
 
-            char* response_enc = encrypt_str_AES(aes, response);
-            len = strlen(response_enc);
+            char* response_ts = addTimestampsAndNonceToMsg(response);
+            char* response_enc = encrypt_str_AES(aes, response_ts);
+            len = (int)strlen(response_enc);
 
 
             int to_write = len;
