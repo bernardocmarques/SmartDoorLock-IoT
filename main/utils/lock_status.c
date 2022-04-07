@@ -60,5 +60,5 @@ void unlock_lock() {
 }
 
 void disconnect_lock() {
-    set_lock_status(unlocked);
+    set_lock_status(idle);
 }

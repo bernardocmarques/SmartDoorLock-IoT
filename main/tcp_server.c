@@ -59,6 +59,7 @@ static void disconnect_sock(const int sock) {
     set_user_state(addr_str, DISCONNECTED);
     free_AES(get_user_AES_ctx(addr_str));
     close(sock);
+    disconnect_lock();
 }
 
 static void do_retransmit(const int sock) {

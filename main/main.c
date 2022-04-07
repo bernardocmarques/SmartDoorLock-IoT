@@ -30,5 +30,6 @@ void app_main(void) {
 //    restart_esp(3); // fixme remove
 
     ble_main();
+    set_lock_status(idle);
     
 }

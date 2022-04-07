@@ -70,6 +70,7 @@ void disconnect() {
     vTaskDelay(100 / portTICK_PERIOD_MS);
     sendATCmd("AT+DISC\r\n");
     vTaskDelay(100 / portTICK_PERIOD_MS);
+    disconnect_lock();
 }
 
 
@@ -84,7 +85,7 @@ _Noreturn static void echo_task(void *arg) {
 
     while (1) {
         // Read data from the UART
-        int len = uart_read_bytes(ECHO_UART_PORT_NUM, data, (BUF_SIZE - 1), 500 / portTICK_RATE_MS);
+        int len = uart_read_bytes(ECHO_UART_PORT_NUM, data, (BUF_SIZE - 1), 250 / portTICK_RATE_MS);
         // Write data back to the UART
         if (len) {
             data[len] = '\0';
@@ -92,9 +93,9 @@ _Noreturn static void echo_task(void *arg) {
                 ESP_LOGI(TAG_BLE, "Received AT cmd: %s", data);
                 if (strncmp("+CONNECTED", (char *) data, 10) == 0) {
                     set_user_state(ble_user, CONNECTING);
-
                 } else if (strncmp("+DISCONNECT", (char *) data, 13) == 0) {
                     set_user_state(ble_user, DISCONNECTED);
+                    disconnect_lock();
                 }
 
                 continue;
