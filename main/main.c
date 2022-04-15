@@ -11,6 +11,8 @@
 #include "esp_touch_util.h"
 #include "wifi_connect_util.h"
 
+#include "utils/database_util.h"
+
 const static char* TAG = "MAIN";
 
 void app_main(void) {
@@ -29,6 +31,9 @@ void app_main(void) {
     tcp_main();
 //    restart_esp(3); // fixme remove
 
+    char* invite_id = create_invite(1649787416, admin, 1649787416, 1649787416);
+
+    if (invite_id != NULL) ESP_LOGE(TAG, "%s", invite_id);
     ble_main();
     set_lock_status(idle);
     

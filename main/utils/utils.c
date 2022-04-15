@@ -7,7 +7,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "rsa_util.h"
-#include "base64.h"
+#include "base64_util.h"
 #include "user_info.h"
 
 static const char *TAG = "Utils";

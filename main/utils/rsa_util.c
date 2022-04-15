@@ -5,9 +5,10 @@
 #include "esp_log.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/pk.h"
-#include "base64.h"
+#include "base64_util.h"
 #include "rsa_util.h"
 #include "mbedtls/entropy_poll.h"
+#include "sha256_util.h"
 
 
 const char TAG[] = "RSA_UTIL";
@@ -54,55 +55,52 @@ void print_array_RSA(unsigned char* a, int n) {
     }
 }
 
-void encrypt() {
+char* sign_RSA(char* to_sign) {
     mbedtls_pk_context clientkey;
     mbedtls_rsa_context rsa;
 
-    
-    const unsigned char orig_buf[6] = "Ola !";
-    unsigned char encrypted_buf[KEY_SIZE_BYTES_RSA];
-    unsigned char decrypted_buf[KEY_SIZE_BYTES_RSA];
+
+    unsigned char * signature_buf = (unsigned char *) malloc(sizeof(unsigned char) * KEY_SIZE_BYTES_RSA);
 
     int res = 0;
-
-    memset(encrypted_buf, '#', sizeof(encrypted_buf));
-    memset(decrypted_buf, '#', sizeof(decrypted_buf));
-
-    // memset(decrypted_buf, 'A', sizeof(orig_buf));
-
-
-    ESP_LOGI("Orig", "%x | %s", res*-1, orig_buf);
-    // print_array_RSA(orig_buf, S);
-
 
     mbedtls_pk_init(&clientkey);
     res = mbedtls_pk_parse_key(&clientkey, (const uint8_t *)privkey_2048_buf, sizeof(privkey_2048_buf), NULL, 0);
 
+    if (res != 0) {
+        ESP_LOGE(TAG, "Failed while parsing key. Code: %X", -res);
+        return NULL;
+    }
 
-    ESP_LOGI("PRIV", "%x | %s", res*-1, privkey_2048_buf);
-
-    memcpy(&rsa, mbedtls_pk_rsa(clientkey), sizeof(mbedtls_rsa_context));
+    rsa = *mbedtls_pk_rsa(clientkey);
     mbedtls_rsa_set_padding(&rsa, MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_SHA256);
 
+    uint8_t* hash = (uint8_t*) malloc(sizeof(uint8_t) * 32);
 
-    ESP_LOGI("CAN PUB", "%d", mbedtls_rsa_check_pubkey(&rsa));
-    ESP_LOGI("HASH_ID", "%d", mbedtls_md_info_from_type( (mbedtls_md_type_t) rsa.hash_id ) == NULL);
-
-
-    res = mbedtls_rsa_rsaes_oaep_encrypt(&rsa, myrand, NULL, MBEDTLS_RSA_PUBLIC, NULL, 0, sizeof(unsigned char) * 6, orig_buf, encrypted_buf);
+    hash_sha256(to_sign, hash);
 
 
-    ESP_LOGI("Enc", "%x | %s", res*-1, encrypted_buf);
-    // print_array_RSA(encrypted_buf, S);
+    res = mbedtls_rsa_rsassa_pss_sign(
+            &rsa,
+            myrand,
+            NULL,
+            MBEDTLS_RSA_PRIVATE,
+            MBEDTLS_MD_SHA256,
+            0,
+            (unsigned char*) hash,
+            signature_buf);
+    if (res != 0) {
+        ESP_LOGE(TAG, "Failed while sign. Code: %X", -res);
+        return NULL;
+    }
 
-    
     size_t base64_size;
-    char* encrypted_base64 = base64_encode(encrypted_buf, KEY_SIZE_BYTES_RSA, &base64_size);
-    ESP_LOGI("Enc B64", "%x | %s", res*-1, encrypted_base64);
+    char* signature_base64 = base64_encode(signature_buf, KEY_SIZE_BYTES_RSA, &base64_size);
 
+    mbedtls_rsa_free(&rsa);
 
+    return signature_base64;
 }
-
 
 
 void free_RSA_Decrypted(RSA_Decrypted* rsa_decrypted) {

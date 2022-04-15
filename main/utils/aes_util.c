@@ -5,7 +5,7 @@
 #include "aes/esp_aes.h"
 #include "PKCS7.h"
 #include "aes_util.h"
-#include "base64.h"
+#include "base64_util.h"
 #include "esp_system.h"
 #include "utils.h"
 

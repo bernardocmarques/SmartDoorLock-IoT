@@ -28,7 +28,7 @@
 #include "utils/utils.h"
 #include "utils/aes_util.h"
 #include "utils/rsa_util.h"
-#include "utils/base64.h"
+#include "utils/base64_util.h"
 #include "utils/nvs_util.h"
 #include "utils/authorization.h"
 #include "utils/user_info.h"

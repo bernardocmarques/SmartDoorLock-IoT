@@ -9,7 +9,7 @@
 nonce_t* head = NULL;
 
 //static const char TAG[] = "NONCE";
-static const int ONE_SECOND_IN_MILLIS = 1000;
+//static const int ONE_SECOND_IN_MILLIS = 1000;
 
 void addNonceSorted(long nonce, int expires) {
     nonce_t* newNonce;
@@ -41,7 +41,7 @@ void addNonceSorted(long nonce, int expires) {
 }
 
 bool checkNonce(long nonce) {
-    long now_ts = (long) getNowTimestamp();
+    int now_ts = getNowTimestamp();
 
     if (head == NULL) {
         return true;
@@ -73,14 +73,14 @@ bool checkNonce(long nonce) {
 }
 
 char* addTimestampsAndNonceToMsg(char* msg) {
-    char timestamp_str_1[15];
-    char timestamp_str_2[15];
-    char nonce_str[15];
+    char timestamp_str_1[21];
+    char timestamp_str_2[21];
+    char nonce_str[21];
 
-    long now_ts = (long) getNowTimestamp();
+    int now_ts = getNowTimestamp();
 
-    sprintf(timestamp_str_1, "%ld", now_ts - 30 * ONE_SECOND_IN_MILLIS);
-    sprintf(timestamp_str_2, "%ld", now_ts + 30 * ONE_SECOND_IN_MILLIS);
+    sprintf(timestamp_str_1, "%d", now_ts - 30);
+    sprintf(timestamp_str_2, "%d", now_ts + 30);
     sprintf(nonce_str, "%u", esp_random());
 
     char* result = (char*) malloc((strlen(msg) + strlen(timestamp_str_1) + strlen(timestamp_str_2) + strlen(nonce_str)) * sizeof(char));

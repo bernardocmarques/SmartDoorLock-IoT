@@ -11,7 +11,7 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include "utils/utils.h"
-#include "base64.h"
+#include "base64_util.h"
 //
 #define TXD_PIN (CONFIG_EXAMPLE_UART_TXD)
 #define RXD_PIN (CONFIG_EXAMPLE_UART_RXD)

@@ -12,6 +12,13 @@ typedef struct {
     int dataLength;
 } RSA_Decrypted;
 
+typedef struct {
+    unsigned char* data;
+    int dataLength;
+} RSA_Encrypted;
+
+char* sign_RSA(char* plaintext);
+
 void free_RSA_Decrypted(RSA_Decrypted* rsa_decrypted);
 
 RSA_Decrypted* decrypt_RSA(uint8_t* chipertext);
