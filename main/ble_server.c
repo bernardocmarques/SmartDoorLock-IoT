@@ -41,7 +41,7 @@ void init(void) {
     uart_param_config(ECHO_UART_PORT_NUM, &uart_config);
     uart_set_pin(ECHO_UART_PORT_NUM, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 
-    set_user_state(ble_user, DISCONNECTED);
+    set_user_state(ble_user, DISCONNECTED, "");
 }
 
 int sendATCmd(char* AT_cmd) {
@@ -66,7 +66,7 @@ int sendData(char* data) {
 }
 
 void disconnect() {
-    set_user_state(ble_user, DISCONNECTED);
+    set_user_state(ble_user, DISCONNECTED, "");
     vTaskDelay(100 / portTICK_PERIOD_MS);
     sendATCmd("AT+DISC\r\n");
     vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -92,9 +92,9 @@ _Noreturn static void echo_task(void *arg) {
             if (strncmp("AT+", (char *) data, 3) == 0 || strncmp("+", (char *) data, 1) == 0) {
                 ESP_LOGI(TAG_BLE, "Received AT cmd: %s", data);
                 if (strncmp("+CONNECTED", (char *) data, 10) == 0) {
-                    set_user_state(ble_user, CONNECTING);
+                    set_user_state(ble_user, CONNECTING, "");
                 } else if (strncmp("+DISCONNECT", (char *) data, 13) == 0) {
-                    set_user_state(ble_user, DISCONNECTED);
+                    set_user_state(ble_user, DISCONNECTED, "");
                     disconnect_lock();
                 }
 

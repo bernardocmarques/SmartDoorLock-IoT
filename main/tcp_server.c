@@ -56,7 +56,7 @@ void createTaskBLE();
 
 static void disconnect_sock(const int sock) {
 //    createTaskBLE();
-    set_user_state(addr_str, DISCONNECTED);
+    set_user_state(addr_str, DISCONNECTED, "");
     free_AES(get_user_AES_ctx(addr_str));
     close(sock);
     disconnect_lock();
@@ -229,7 +229,7 @@ static void tcp_server_task(void *pvParameters) {
 #endif
         ESP_LOGI(TAG_TCP, "Socket accepted ip address: %s", addr_str);
 
-        set_user_state(addr_str, CONNECTING);
+        set_user_state(addr_str, CONNECTING, "");
 
         ccomp_timer_start(); //FIXME remove timer
         ESP_LOGE(TAG_TCP, "TIMERS: %ld", (long) ccomp_timer_stop()); //FIXME remove timer

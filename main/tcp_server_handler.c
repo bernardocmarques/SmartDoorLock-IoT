@@ -9,6 +9,7 @@
 #include "utils/time_util.h"
 #include "utils/nonce.h"
 #include "pushingbox_util.h"
+#include "database_util.h"
 
 #define SEP " "
 
@@ -94,15 +95,15 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
             return NAK_MESSAGE;
         }
 
-        char* user_id = args[0];
+        char* username = args[0];
         char* auth_code = args[1];
 
 
         int is_valid = 0;
         if (verifyTimestampsAndNonce(args, 2)) {
             uint8_t* auth_seed = get_user_seed(user_ip);
-            is_valid = check_authorization_code(user_id, auth_code, auth_seed);
-            if (is_valid) set_user_state(user_ip, AUTHORIZED);
+            is_valid = check_authorization_code(username, auth_code, auth_seed);
+            if (is_valid) set_user_state(user_ip, AUTHORIZED, username);
         } else {
             ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
         }
@@ -154,6 +155,84 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free(c);
         set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
+    } else if (strcmp(c, "RNI") == 0) {
+        int n_args = 0;
+
+        if (strncmp("RNI 0", (char *) cmd, 5) == 0) {
+            n_args = 4;
+        } else if (strncmp("RNI 1", (char *) cmd, 5) == 0) {
+            n_args = 4;
+        } else if (strncmp("RNI 2", (char *) cmd, 5) == 0) {
+            n_args = 6;
+        } else if (strncmp("RNI 3", (char *) cmd, 5) == 0) {
+            n_args = 7;
+        } else if (strncmp("RNI 4", (char *) cmd, 5) == 0) {
+            n_args = 5;
+        }
+
+
+            char **args = getArgs(cmd, n_args);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
+        enum userType user_type = strtol(args[0], NULL, 10);
+
+        int valid_from = -1;
+        int valid_until = -1;
+        char* weekdays_str = NULL;
+        int one_day = -1;
+
+        switch (user_type) {
+            case admin:
+            case owner:
+                break;
+            case tenant:
+                valid_from = strtol(args[1],NULL, 10);
+                valid_until = strtol(args[2],NULL, 10);
+                break;
+            case periodic_user:
+                valid_from = strtol(args[1],NULL, 10);
+                valid_until = strtol(args[2],NULL, 10);
+                weekdays_str = args[3];
+                break;
+            case one_time_user:
+                one_day = strtol(args[1],NULL, 10);
+                break;
+            default:
+                break;
+        }
+
+        char* response = NAK_MESSAGE;
+
+
+        if (verifyTimestampsAndNonce(args, n_args - 3)) {
+            if (get_user_state(user_ip) == AUTHORIZED) {
+                if (get_user_type(get_username(user_ip)) > user_type) { // fixme change permissions verification
+                    ESP_LOGE("Error", "User does not have enough permissions to create this invite.");
+                    response = NAK_MESSAGE;
+                }
+                char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
+
+                response = malloc(strlen("XXX ") + strlen(invite_id));
+
+                sprintf(response, "SNI %s", invite_id);
+                if (invite_id == NULL) {
+                    ESP_LOGE("Error", "Could not create invite");
+                    response = NAK_MESSAGE;
+                }
+
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+        }
+
+        free_args(args, n_args);
+        free(c);
+        set_BLE_user_state_to_connecting();
+        return response;
     } else if (strcmp(c, "SNT") == 0) {
         char **args = getArgs(cmd, 4);
 
@@ -175,7 +254,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free_args(args, 4);
         free(c);
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else {
+    }else {
         return NAK_MESSAGE;
     }
 	return NAK_MESSAGE;

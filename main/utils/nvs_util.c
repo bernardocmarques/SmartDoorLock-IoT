@@ -39,7 +39,7 @@ esp_err_t open_nvs(const char* namespace, nvs_handle_t* my_handle) {
 }
 
 
-esp_err_t get_authorization(const char* user_id, authorization* auth) {
+esp_err_t get_authorization(const char* username, authorization* auth) {
     esp_err_t err = init_nvs();
 
     if (err != ESP_OK) return err;
@@ -51,17 +51,17 @@ esp_err_t get_authorization(const char* user_id, authorization* auth) {
 
 
     size_t required_size = 0;  // value will default to 0, if not set yet in NVS    
-    err = nvs_get_blob(my_handle, user_id, NULL, &required_size);
+    err = nvs_get_blob(my_handle, username, NULL, &required_size);
     
     if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) return err;
 
 
     if (required_size == 0) {
-        ESP_LOGE(TAG, "Authorization for user %s does not exist!", user_id);
+        ESP_LOGE(TAG, "Authorization for user %s does not exist!", username);
         return err;
     } else {
 
-        err = nvs_get_blob(my_handle, user_id, auth, &required_size);
+        err = nvs_get_blob(my_handle, username, auth, &required_size);
 
         if (err != ESP_OK) {
             free(auth);
@@ -85,10 +85,30 @@ esp_err_t set_authorization(authorization* auth) {
 
     size_t required_size = sizeof(authorization);
 
-    err = nvs_set_blob(my_handle, auth->user_id, auth, required_size);
+    err = nvs_set_blob(my_handle, auth->username, auth, required_size);
+    
+    if (err != ESP_OK) return err;
 
-    free(auth);
+    // Commit
+    err = nvs_commit(my_handle);
+    if (err != ESP_OK) return err;
 
+    // Close
+    nvs_close(my_handle);
+    return err;
+}
+
+esp_err_t delete_authorization(char* username) {
+    esp_err_t err = init_nvs();
+    nvs_handle_t my_handle;
+
+    if (err != ESP_OK) return err;
+
+    err = open_nvs("authorizations", &my_handle);
+
+    if (err != ESP_OK) return err;
+
+    err = nvs_erase_key(my_handle, username);
     if (err != ESP_OK) return err;
 
     // Commit
@@ -207,7 +227,7 @@ esp_err_t delete_saved_wifi() {
 //             return err;
 //         }
         
-//         ESP_LOGI(TAG, "User_id: %s", auth->user_id);
+//         ESP_LOGI(TAG, "username: %s", auth->username);
 
 //         free(auth);
 //     }
@@ -218,7 +238,7 @@ esp_err_t delete_saved_wifi() {
 //     // Write value including previously saved blob if available
 //     required_size = sizeof(autorization);
 
-//     strcpy(auth->user_id, "0vn3kfl3n");
+//     strcpy(auth->username, "0vn3kfl3n");
 
 //     err = nvs_set_blob(my_handle, "test", auth, required_size);
 

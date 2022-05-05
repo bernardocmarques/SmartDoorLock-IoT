@@ -5,6 +5,7 @@
 char* TAG_LED = "LED";
 
 lock_status_t status = idle;
+#define LED_GPIO      (CONFIG_LED_GPIO)
 
 
 static led_strip_t *pStrip_a;
@@ -25,7 +26,7 @@ static void configure_led() {
     led_configured = 1;
     ESP_LOGI(TAG_LED, "Example configured to blink addressable LED!");
     /* LED strip initialization with the GPIO and pixels number*/
-    pStrip_a = led_strip_init(0, 18, 1);
+    pStrip_a = led_strip_init(0, LED_GPIO, 1);
     /* Set all LED off to clear all pixels */
     pStrip_a->clear(pStrip_a, 50);
     ESP_LOGI(TAG_LED, "LED config done");

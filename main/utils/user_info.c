@@ -10,7 +10,7 @@ user_info_hash_t* users_info = NULL;
 
 /* Setters */
 
-void set_user_state(char* user_ip, user_state_t state) {
+void set_user_state(char* user_ip, user_state_t state, char* username) {
     user_info_hash_t* user_info;
 
     HASH_FIND_INT(users_info, user_ip, user_info);
@@ -22,6 +22,8 @@ void set_user_state(char* user_ip, user_state_t state) {
     }
 
     user_info->state = state;
+    strcpy(user_info->username, username);
+
 }
 
 uint8_t* generate_random_seed(char* user_ip) {
@@ -55,7 +57,7 @@ void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx) {
 
 void set_BLE_user_state_to_connecting() {
     if (get_user_info(ble_user) != DISCONNECTED) {
-        set_user_state(ble_user, CONNECTING);
+        set_user_state(ble_user, CONNECTING, "");
     }
 }
 
@@ -75,6 +77,13 @@ user_state_t get_user_state(char* user_ip) {
 
     HASH_FIND_INT(users_info, user_ip, user_info);
     return user_info->state;
+}
+
+char* get_username(char* user_ip) {
+    user_info_hash_t* user_info;
+
+    HASH_FIND_INT(users_info, user_ip, user_info);
+    return strlen(user_info->username) != 0 ? user_info->username : NULL;
 }
 
 uint8_t* get_user_seed(char* user_ip) {

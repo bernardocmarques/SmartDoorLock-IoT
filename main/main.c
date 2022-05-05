@@ -13,7 +13,12 @@
 
 #include "utils/database_util.h"
 
-const static char* TAG = "MAIN";
+#define IDF_TARGET      (CONFIG_IDF_TARGET)
+
+#define ESP32_S3_TARGET "esp32s3"
+#define ESP32_S2_TARGET "esp32s2"
+
+//const static char* TAG = "MAIN";
 
 void app_main(void) {
 
@@ -31,10 +36,15 @@ void app_main(void) {
     tcp_main();
 //    restart_esp(3); // fixme remove
 
-    char* invite_id = create_invite(1649787416, admin, 1649787416, 1649787416);
+    create_invite(1, admin, -1, -1, NULL, -1);
 
-    if (invite_id != NULL) ESP_LOGE(TAG, "%s", invite_id);
-    ble_main();
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
+        ble_main();
+    } else {
+        ESP_LOGI("main", "Esp3");
+    }
+
+
+
     set_lock_status(idle);
-    
 }

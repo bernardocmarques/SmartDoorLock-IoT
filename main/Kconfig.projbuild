@@ -1,3 +1,18 @@
+menu "General Application Configuration"
+
+     config LED_GPIO
+            int "Led GPIO pin number"
+            range 0 34 if IDF_TARGET_ESP32
+            range 0 46 if IDF_TARGET_ESP32S2
+            range 0 19 if IDF_TARGET_ESP32C3
+            range 0 48 if IDF_TARGET_ESP32S3
+            default 18 if IDF_TARGET_ESP32S2
+            default 48 if IDF_TARGET_ESP32S3
+            help
+                Led GPIO pin number for the door status simulation.
+
+endmenu
+
 menu "TCP Server Configuration"
 
     config EXAMPLE_IPV4

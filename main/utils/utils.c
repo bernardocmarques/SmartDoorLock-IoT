@@ -128,7 +128,7 @@ int retrieve_session_credentials(char* cred_enc, char* user_addr) {
 
     esp_aes_context aes = init_AES(key_256);
     set_AES_ctx(user_addr, aes);
-    set_user_state(user_addr, CONNECTED);
+    set_user_state(user_addr, CONNECTED, "");
 
     return 1;
 }
