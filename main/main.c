@@ -8,6 +8,7 @@
 
 #include "tcp_server.c"
 #include "ble_server.c"
+#include "ble_s3_server.c"
 #include "esp_touch_util.h"
 #include "wifi_connect_util.h"
 
@@ -18,7 +19,7 @@
 #define ESP32_S3_TARGET "esp32s3"
 #define ESP32_S2_TARGET "esp32s2"
 
-//const static char* TAG = "MAIN";
+const static char* TAG_MAIN = "MAIN";
 
 void app_main(void) {
 
@@ -41,10 +42,10 @@ void app_main(void) {
     if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         ble_main();
     } else {
-        ESP_LOGI("main", "Esp3");
+        ble_s3_main();
     }
 
-
+    ESP_LOGI(TAG_MAIN, "Chega aqui!");
 
     set_lock_status(idle);
 }
