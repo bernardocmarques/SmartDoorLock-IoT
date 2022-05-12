@@ -5,6 +5,7 @@
 
 
 user_info_hash_t* users_info = NULL;
+char current_BLE_addr[18] = "";
 
 
 
@@ -56,10 +57,15 @@ void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx) {
 }
 
 void set_BLE_user_state_to_connecting() {
-    if (get_user_info(ble_user) != DISCONNECTED) {
-        set_user_state(ble_user, CONNECTING, "");
+    if (strcmp(current_BLE_addr, "") != 0 && get_user_info(current_BLE_addr) != DISCONNECTED) {
+        set_user_state(current_BLE_addr, CONNECTING, "");
     }
 }
+
+void set_current_BLE_addr(char addr[18]) {
+    strcpy(current_BLE_addr, addr);
+}
+
 
 
 
@@ -99,6 +105,11 @@ esp_aes_context get_user_AES_ctx(char* user_ip) {
     HASH_FIND_INT(users_info, user_ip, user_info);
     return user_info->AES_ctx;
 }
+
+char* get_current_BLE_addr() {
+    return current_BLE_addr;
+}
+
 
 
 

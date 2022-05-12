@@ -30,6 +30,7 @@ uint8_t* generate_random_seed(char* user_ip);
 void set_AES_ctx(char* user_ip, esp_aes_context AES_ctx);
 
 void set_BLE_user_state_to_connecting();
+void set_current_BLE_addr(char addr[18]);
 
 
 /* Getters */
@@ -39,6 +40,7 @@ user_state_t get_user_state(char* user_ip);
 uint8_t* get_user_seed(char* user_ip);
 esp_aes_context get_user_AES_ctx(char* user_ip);
 char* get_username(char* user_ip);
+char* get_current_BLE_addr();
 
 
 /* Delete */

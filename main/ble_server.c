@@ -93,8 +93,10 @@ _Noreturn static void echo_task(void *arg) {
                 ESP_LOGI(TAG_BLE, "Received AT cmd: %s", data);
                 if (strncmp("+CONNECTED", (char *) data, 10) == 0) {
                     set_user_state(ble_user, CONNECTING, "");
+                    set_current_BLE_addr(ble_user);
                 } else if (strncmp("+DISCONNECT", (char *) data, 13) == 0) {
                     set_user_state(ble_user, DISCONNECTED, "");
+                    set_current_BLE_addr(NULL);
                     disconnect_lock();
                 }
 

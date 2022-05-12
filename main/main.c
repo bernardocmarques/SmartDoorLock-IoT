@@ -9,6 +9,8 @@
 #include "tcp_server.c"
 #include "ble_server.c"
 #include "ble_s3_server.c"
+//#include "ble_s3_server(old).c" //fixme remove
+
 #include "esp_touch_util.h"
 #include "wifi_connect_util.h"
 
@@ -37,8 +39,8 @@ void app_main(void) {
     tcp_main();
 //    restart_esp(3); // fixme remove
 
-    create_invite(1, admin, -1, -1, NULL, -1);
-
+//    create_invite(1, admin, -1, -1, NULL, -1);
+//    delete_authorization("I9CUJwR1u2XK0fJ");
     if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         ble_main();
     } else {

@@ -11,7 +11,7 @@
 #include "nvs_util.h"
 
 
-const char* base_url = "http://192.168.1.115:5000";
+const char* base_url = "http://192.168.1.7:5000";
 
 static const char *TAG = "Database_Util";
 
