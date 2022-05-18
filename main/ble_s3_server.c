@@ -325,20 +325,14 @@ static void process_normal_data(char* data) {
     if (state == CONNECTING) {
         if (retrieve_session_credentials(data, ble_user_addr)) {
 
-
             uint8_t* auth_seed = generate_random_seed(ble_user_addr);
 
-            uint freeRAM = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
-            ESP_LOGI(BLE_S3_TAG, "free RAM is %d.", freeRAM);
-
-            if ( !heap_caps_check_integrity_all(true) )
-            {
+            if (!heap_caps_check_integrity_all(true)) {
                 ESP_LOGI(BLE_S3_TAG, "Algo mal");
-
             } else {
                 ESP_LOGI(BLE_S3_TAG, "Well... Algo mal à mesma... so n sei o q.... :(");
-
             }
+
             size_t base64_size;
             char* seed_base64 = base64_encode(auth_seed, sizeof(uint8_t) * 10, &base64_size);
 

@@ -160,7 +160,7 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
         } else {
             int code = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(result_json, "code"));
             char* message = cJSON_GetStringValue(cJSON_GetObjectItem(result_json, "msg"));
-            ESP_LOGE(TAG, "Error Code %d: %s", code, message);
+            ESP_LOGE(TAG, "Create invite: Error Code %d: %s", code, message);
         }
 
     } else {
@@ -251,7 +251,7 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
         } else {
             int code = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(result_json, "code"));
             char* message = cJSON_GetStringValue(cJSON_GetObjectItem(result_json, "msg"));
-            ESP_LOGE(TAG, "Error Code %d: %s", code, message);
+            ESP_LOGE(TAG, "Get Authorization: Error Code %d: %s", code, message);
             return ERR_ARG; //fixme maybe fix error type
         }
 
@@ -261,3 +261,74 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
 
     return err;
 }
+
+//
+//void register_lock(char* certificate) {
+//    cJSON* post_data_json  = cJSON_CreateObject();
+//
+//    uint8_t mac_array[6] = {0};
+//    char mac[18];
+//    esp_err_t err = esp_read_mac(mac_array, ESP_MAC_WIFI_STA);
+//    if (err != ESP_OK) {
+//        ESP_LOGE(TAG, "Error: Could not get MAC Address");
+//    }
+//    sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", mac_array[0], mac_array[1], mac_array[2], mac_array[3], mac_array[4], mac_array[5]);
+//
+//
+//    cJSON_AddItemToObjectCS(post_data_json, "MAC", cJSON_CreateString(mac));
+//    cJSON_AddItemToObjectCS(post_data_json, "certificate", cJSON_CreateString(certificate));
+//    free(certificate);
+//    char local_response_buffer[500] = {0};
+//
+//    esp_http_client_config_t config = {
+//            .host = base_url,
+//            .path = "/",
+//            .event_handler = _http_event_handler,
+//            .user_data = local_response_buffer
+//    };
+//    esp_http_client_handle_t client = esp_http_client_init(&config);
+//
+//
+//    // POST
+//    char* path = "/register-door-lock";
+//    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path)));
+//
+//
+//    sprintf(url, "%s%s", base_url, path);
+//    esp_http_client_set_url(client, url);
+//
+//
+//
+//
+//    char* post_data = cJSON_PrintUnformatted(post_data_json);
+//
+//    ESP_LOGE(TAG, "%s", post_data);
+//
+//    esp_http_client_set_method(client, HTTP_METHOD_POST);
+//    esp_http_client_set_header(client, "Content-Type", "application/json");
+//    esp_http_client_set_post_field(client, post_data, (int)strlen(post_data));
+//    err = esp_http_client_perform(client);
+//
+//    free(post_data);
+////    cJSON_free(post_data_json);
+//    if (err == ESP_OK) {
+//        cJSON* result_json = cJSON_Parse(local_response_buffer);
+//
+//
+//        bool success = cJSON_IsTrue(cJSON_GetObjectItem(result_json, "success"));
+//
+//        if (success) {
+//            ESP_LOGI(TAG, "Lock registered in database.");
+//        } else {
+//            int code = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(result_json, "code"));
+//            char* message = cJSON_GetStringValue(cJSON_GetObjectItem(result_json, "msg"));
+//            ESP_LOGE(TAG, "Error Code %d: %s", code, message);
+//        }
+////        cJSON_free(result_json);
+//
+//
+//    } else {
+//        ESP_LOGE(TAG, "HTTP POST request failed: %s", esp_err_to_name(err));
+//    }
+//
+//}

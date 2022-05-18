@@ -15,33 +15,39 @@ const char TAG[] = "RSA_UTIL";
 
 // TODO remove hardcoded private key
 static const char privkey_2048_buf[] = "-----BEGIN RSA PRIVATE KEY-----\r\n"
-"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\r\n"
+"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\r\n"
 "-----END RSA PRIVATE KEY-----\r\n";
 
+//static char privkey_2048_buf[2048];
+
+
+//void set_rsa_private_key(const char* key) {
+//    strcpy(privkey_2048_buf, key);
+//}
 
 static int myrand(void *rng_state, unsigned char *output, size_t len) {
     size_t olen;
@@ -112,6 +118,8 @@ RSA_Decrypted* decrypt_RSA(uint8_t* chipertext) {
     mbedtls_pk_context clientkey;
     mbedtls_rsa_context rsa;
 
+    ESP_LOGI(TAG, "%s", privkey_2048_buf);
+
 
     unsigned char * decrypted_buf = (unsigned char *) malloc(sizeof(unsigned char) * KEY_SIZE_BYTES_RSA);
     RSA_Decrypted* rsa_decrypted = (RSA_Decrypted*) malloc(sizeof(RSA_Decrypted));
@@ -140,6 +148,8 @@ RSA_Decrypted* decrypt_RSA(uint8_t* chipertext) {
     rsa_decrypted->dataLength = (int)(len_decrypted / sizeof(uint8_t));
 
     mbedtls_rsa_free(&rsa);
+    mbedtls_pk_free(&clientkey);
+
 
     return rsa_decrypted;
 }
