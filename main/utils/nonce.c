@@ -2,13 +2,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 #include "nonce.h"
 #include "esp_system.h"
 
 
 nonce_t* head = NULL;
 
-//static const char TAG[] = "NONCE";
 //static const int ONE_SECOND_IN_MILLIS = 1000;
 
 void addNonceSorted(long nonce, int expires) {
@@ -83,8 +83,7 @@ char* addTimestampsAndNonceToMsg(char* msg) {
     sprintf(timestamp_str_2, "%d", now_ts + 30);
     sprintf(nonce_str, "%u", esp_random());
 
-    char* result = (char*) malloc((strlen(msg) + strlen(timestamp_str_1) + strlen(timestamp_str_2) + strlen(nonce_str)) * sizeof(char));
-
+    char* result = (char*) malloc((strlen(msg) + strlen(timestamp_str_1) + strlen(timestamp_str_2) + strlen(nonce_str) + 4) * sizeof(char));
     sprintf(result, "%s %s %s %s", msg, timestamp_str_1, timestamp_str_2, nonce_str);
 
     return result;

@@ -127,7 +127,7 @@ char* decrypt_base64_AES(esp_aes_context ctx, char* chipertext_and_iv_base64) {
     pt = strtok(chipertext_and_iv_base64, sep);
 //    char* chipertext_base64 = pt; //FIXME maybe copy
 
-    char* chipertext_base64 = malloc(sizeof(char) * strlen(pt));
+    char* chipertext_base64 = malloc(sizeof(char) * (strlen(pt) + 1));
     strcpy(chipertext_base64, pt);
 
     size_t size_iv;
@@ -135,22 +135,21 @@ char* decrypt_base64_AES(esp_aes_context ctx, char* chipertext_and_iv_base64) {
     iv_base64_size = (int)(strlen(pt)/sizeof(char));
     uint8_t* iv = base64_decode(pt, iv_base64_size, &size_iv);
 
-
-
     int base64_size = (int)(strlen(chipertext_base64)/sizeof(char));
 
     size_t size;
     uint8_t* chipertext = base64_decode(chipertext_base64, base64_size, &size);
-    
+
 
     AES_Decrypted* aes_decrypted = decrypt_AES(ctx, chipertext, size, iv);
 
     // Convert to char*
-    char* decrypted_str = (char *) malloc(sizeof(char) * aes_decrypted->dataLength);
+    char* decrypted_str = (char *) malloc(sizeof(char) * (aes_decrypted->dataLength + 1));
     memcpy(decrypted_str, aes_decrypted->data, aes_decrypted->dataLength);
     decrypted_str[aes_decrypted->dataLength] = '\0';
 
     free(chipertext);
+
     free_AES_Decrypted(aes_decrypted);
 
     return decrypted_str;

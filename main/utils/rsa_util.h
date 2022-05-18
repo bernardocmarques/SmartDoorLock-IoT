@@ -17,7 +17,7 @@ typedef struct {
     int dataLength;
 } RSA_Encrypted;
 
-//void set_rsa_private_key(const char* key);
+void set_rsa_private_key(const char* key);
 
 char* sign_RSA(char* plaintext);
 

@@ -327,12 +327,6 @@ static void process_normal_data(char* data) {
 
             uint8_t* auth_seed = generate_random_seed(ble_user_addr);
 
-            if (!heap_caps_check_integrity_all(true)) {
-                ESP_LOGI(BLE_S3_TAG, "Algo mal");
-            } else {
-                ESP_LOGI(BLE_S3_TAG, "Well... Algo mal à mesma... so n sei o q.... :(");
-            }
-
             size_t base64_size;
             char* seed_base64 = base64_encode(auth_seed, sizeof(uint8_t) * 10, &base64_size);
 
@@ -350,16 +344,21 @@ static void process_normal_data(char* data) {
         }
     } else if (state >= CONNECTED) { // Connected or Authorized
         aes = get_user_AES_ctx(ble_user_addr);
+
         char* cmd = decrypt_base64_AES(aes, data);
+
         ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
         response = checkCommand(cmd, ble_user_addr, 0); // FIXME remove t1 after
+
     } else {
         ESP_LOGE(TAG_BLE, "Disconnected by server! (Not CONNECTED)");
         disconnect_ble_s3();
         return;
     }
 
+
     response_ts = addTimestampsAndNonceToMsg(response);
+
     response_enc = encrypt_str_AES(aes, response_ts);
     send_data_ble_s3(response_enc);
 
