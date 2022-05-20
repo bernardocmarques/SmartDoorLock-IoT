@@ -73,25 +73,24 @@ void init_rsa_key() {
     fread(buf, 1, buf_size, f_key);
     fclose(f_key);
 
-    // Display the read contents from the file
-    ESP_LOGI(TAG_MAIN, "Read from private.key:\n%s", buf);
-
     set_rsa_private_key(buf);
 
-    // Open for reading certificate.crt
-    FILE* f_cert = fopen("/spiffs/certificate.crt", "r");
-    if (f_cert == NULL) {
-        ESP_LOGE(TAG_MAIN, "Failed to open certificate.crt");
-        return;
+    if (get_registration_status() == NOT_REGISTERED) {
+        // Open for reading certificate.crt
+        FILE* f_cert = fopen("/spiffs/certificate.crt", "r");
+        if (f_cert == NULL) {
+            ESP_LOGE(TAG_MAIN, "Failed to open certificate.crt");
+            return;
+        }
+
+        memset(buf, 0, buf_size);
+        fread(buf, 1, buf_size, f_cert);
+        fclose(f_cert);
+
+        ESP_LOGI(TAG_MAIN, "Read from cert:\n%s", buf);
+
+        register_lock(buf);
     }
-
-    memset(buf, 0, buf_size);
-    fread(buf, 1, buf_size, f_cert);
-    fclose(f_cert);
-
-    ESP_LOGI(TAG_MAIN, "Read from cert:\n%s", buf);
-
-//    register_lock(buf);
 
     // All done, unmount partition and disable SPIFFS
     esp_vfs_spiffs_unregister(NULL);
@@ -101,23 +100,26 @@ void init_rsa_key() {
 void app_main(void) {
 
     ESP_ERROR_CHECK(nvs_flash_init());
+    delete_saved_wifi();
 
     wifi_config_t wifiConfig;
     if (get_saved_wifi(&wifiConfig) == ESP_OK) {
-        if(!connect_to_wifi(wifiConfig)) try_to_connect_to_wifi_esp_touch();
+        if(!connect_to_wifi(wifiConfig)) {
+            try_to_connect_to_wifi_esp_touch();
+        }
     } else {
         try_to_connect_to_wifi_esp_touch();
     }
 
     obtain_time();
 
-    init_rsa_key();
+   init_rsa_key();
 
     tcp_main();
 //    restart_esp(3); // fixme remove
 
 //    create_invite(1, admin, -1, -1, NULL, -1);
-//    delete_authorization("I9CUJwR1u2XK0fJ");
+    delete_authorization("I9CUJwR1u2XK0fJ");
     if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         ble_main();
     } else {

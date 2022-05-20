@@ -28,7 +28,7 @@
 #define SPP_PROFILE_NUM                           1
 #define SPP_PROFILE_APP_IDX                       0
 #define ESP_SPP_APP_ID                            0x55
-#define SPP_SVC_INST_ID                    0
+#define SPP_SVC_INST_ID                           0
 #define EXT_ADV_HANDLE                            0
 #define NUM_EXT_ADV_SET                           1
 #define EXT_ADV_DURATION                          0
@@ -51,7 +51,7 @@ static uint16_t spp_handle_table[SPP_IDX_NB];
 
 static uint8_t ext_adv_raw_data[] = {
         0x02, 0x01, 0x06,
-        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd,
+        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd, 0xff,
         0x11, 0X09, 'E', 'S', 'P', '_', 'B', 'L', 'E', '5', '0', '_', 'S', 'E', 'R', 'V', 'E', 'R',
 };
 
@@ -73,7 +73,7 @@ static char ble_user_addr[18];
 esp_ble_gap_ext_adv_params_t spp_adv_params = {
         .type = ESP_BLE_GAP_SET_EXT_ADV_PROP_CONNECTABLE,
         .interval_min = 0x20,
-        .interval_max = 0x20,
+        .interval_max = 0x40,
         .channel_map = ADV_CHNL_ALL,
         .filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
         .primary_phy = ESP_BLE_GAP_PHY_1M,
@@ -307,6 +307,8 @@ static void spp_task_init(void) {
     xTaskCreate(spp_cmd_task, "spp_cmd_task", 2048, NULL, 10, NULL);
 }
 
+bool got_first_invite_session_key = false;
+
 static void process_normal_data(char* data) {
 
     ESP_LOGI(BLE_S3_TAG, "DATA ----> %s", data);
@@ -315,12 +317,44 @@ static void process_normal_data(char* data) {
     char* response_enc;
     char* response_ts;
 
-    user_state_t state = get_user_state(ble_user_addr);
     esp_aes_context aes;
+
+
+    if (get_registration_status() == REGISTERED) {
+        ESP_LOGI(BLE_S3_TAG, "Not auth, First comm");
+
+        if (!got_first_invite_session_key) {
+            if (retrieve_session_credentials(data, ble_user_addr)) {
+                response = "ACK";
+
+                aes = get_user_AES_ctx(ble_user_addr);
+                got_first_invite_session_key = true;
+            }  else {
+                ESP_LOGE(TAG_BLE, "Disconnected by server! (Error getting session key)");
+                disconnect_ble_s3();
+                return;
+            }
+        } else { // got_first_invite_session_key
+            got_first_invite_session_key = false;
+            aes = get_user_AES_ctx(ble_user_addr);
+
+            char* cmd = decrypt_base64_AES(aes, data);
+
+            ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
+            response = checkCommand(cmd, ble_user_addr, 0); // FIXME remove t1 after
+        }
+        response_ts = addTimestampsAndNonceToMsg(response);
+
+        response_enc = encrypt_str_AES(aes, response_ts);
+        send_data_ble_s3(response_enc);
+        return;
+
+    }
+
+    user_state_t state = get_user_state(ble_user_addr);
     aes = get_user_AES_ctx(ble_user_addr);
 
     ESP_LOGW(BLE_S3_TAG, "State = %d", state);
-
 
     if (state == CONNECTING) {
         if (retrieve_session_credentials(data, ble_user_addr)) {

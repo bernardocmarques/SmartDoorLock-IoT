@@ -233,6 +233,44 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free(c);
         set_BLE_user_state_to_connecting();
         return response;
+    }  else if (strcmp(c, "RFI") == 0) {
+        if (get_registration_status() != REGISTERED) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+        int n_args = 1;
+
+        char **args = getArgs(cmd, n_args);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
+        enum userType user_type = 0;
+
+        int valid_from = -1;
+        int valid_until = -1;
+        char* weekdays_str = NULL;
+        int one_day = -1;
+
+        char* response = NAK_MESSAGE;
+
+
+        char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
+
+        response = malloc(strlen("XXX ") + strlen(invite_id));
+
+        sprintf(response, "SFI %s", invite_id);
+        if (invite_id == NULL) {
+            ESP_LOGE("Error", "Could not create invite");
+            response = NAK_MESSAGE;
+        }
+
+        free_args(args, n_args);
+        free(c);
+        set_BLE_user_state_to_connecting();
+        return response;
     } else if (strcmp(c, "SNT") == 0) {
         char **args = getArgs(cmd, 4);
 
