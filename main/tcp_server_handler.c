@@ -216,7 +216,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
                 }
                 char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
 
-                response = malloc(strlen("XXX ") + strlen(invite_id));
+                response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
                 sprintf(response, "SNI %s", invite_id);
                 if (invite_id == NULL) {
@@ -234,11 +234,12 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         set_BLE_user_state_to_connecting();
         return response;
     }  else if (strcmp(c, "RFI") == 0) {
+
         if (get_registration_status() != REGISTERED) {
             free(c);
             return NAK_MESSAGE;
         }
-        int n_args = 1;
+        int n_args = 4;
 
         char **args = getArgs(cmd, n_args);
 
@@ -256,20 +257,23 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
 
         char* response = NAK_MESSAGE;
 
+        if (verifyTimestampsAndNonce(args, n_args - 3)) {
 
-        char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
+            char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
 
-        response = malloc(strlen("XXX ") + strlen(invite_id));
+            response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
-        sprintf(response, "SFI %s", invite_id);
-        if (invite_id == NULL) {
-            ESP_LOGE("Error", "Could not create invite");
-            response = NAK_MESSAGE;
+            sprintf(response, "SFI %s", invite_id);
+            if (invite_id == NULL) {
+                ESP_LOGE("Error", "Could not create invite");
+                response = NAK_MESSAGE;
+            }
+
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
         }
-
         free_args(args, n_args);
         free(c);
-        set_BLE_user_state_to_connecting();
         return response;
     } else if (strcmp(c, "SNT") == 0) {
         char **args = getArgs(cmd, 4);

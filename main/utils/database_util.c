@@ -203,7 +203,7 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
 
     // POST
     char* path = "/request-authorization";
-    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path)));
+    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path) + 1));
 
 
     sprintf(url, "%s%s", base_url, path);
@@ -291,7 +291,7 @@ void register_lock(char* certificate) {
 
     // POST
     char* path = "/register-door-lock";
-    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path)));
+    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path) + 1));
 
 
     sprintf(url, "%s%s", base_url, path);
@@ -357,7 +357,7 @@ lock_registration_status_t get_registration_status() {
 
     // GET
     char* path = "/check-lock-registration-status?MAC=";
-    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path)) + sizeof (mac));
+    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path) + 1) + sizeof (mac));
 
 
     sprintf(url, "%s%s%s", base_url, path, mac);

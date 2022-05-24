@@ -100,7 +100,7 @@ void init_rsa_key() {
 void app_main(void) {
 
     ESP_ERROR_CHECK(nvs_flash_init());
-    delete_saved_wifi();
+//    delete_saved_wifi(); // fixme remove
 
     wifi_config_t wifiConfig;
     if (get_saved_wifi(&wifiConfig) == ESP_OK) {
@@ -116,6 +116,8 @@ void app_main(void) {
    init_rsa_key();
 
     tcp_main();
+//    heap_caps_check_integrity_all(1); // fixme remove
+
 //    restart_esp(3); // fixme remove
 
 //    create_invite(1, admin, -1, -1, NULL, -1);

@@ -307,7 +307,7 @@ static void spp_task_init(void) {
     xTaskCreate(spp_cmd_task, "spp_cmd_task", 2048, NULL, 10, NULL);
 }
 
-bool got_first_invite_session_key = false;
+bool got_first_invite_session_key_s3 = false;
 
 static void process_normal_data(char* data) {
 
@@ -323,26 +323,28 @@ static void process_normal_data(char* data) {
     if (get_registration_status() == REGISTERED) {
         ESP_LOGI(BLE_S3_TAG, "Not auth, First comm");
 
-        if (!got_first_invite_session_key) {
+        if (!got_first_invite_session_key_s3) {
             if (retrieve_session_credentials(data, ble_user_addr)) {
                 response = "ACK";
 
                 aes = get_user_AES_ctx(ble_user_addr);
-                got_first_invite_session_key = true;
+                got_first_invite_session_key_s3 = true;
             }  else {
-                ESP_LOGE(TAG_BLE, "Disconnected by server! (Error getting session key)");
+                ESP_LOGE(BLE_S3_TAG, "Disconnected by server! (Error getting session key)");
                 disconnect_ble_s3();
                 return;
             }
-        } else { // got_first_invite_session_key
-            got_first_invite_session_key = false;
+        } else { // got_first_invite_session_key_s3
+            got_first_invite_session_key_s3 = false;
             aes = get_user_AES_ctx(ble_user_addr);
 
             char* cmd = decrypt_base64_AES(aes, data);
 
-            ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
+            ESP_LOGI(BLE_S3_TAG, "After Dec: %s", cmd);
             response = checkCommand(cmd, ble_user_addr, 0); // FIXME remove t1 after
         }
+
+        ESP_LOGI(BLE_S3_TAG, "resp -> %s", response);
         response_ts = addTimestampsAndNonceToMsg(response);
 
         response_enc = encrypt_str_AES(aes, response_ts);
@@ -366,13 +368,13 @@ static void process_normal_data(char* data) {
 
             response = malloc((sizeof(char) * 5) + base64_size);
 
-            ESP_LOGI(TAG_BLE, "RAC %s", seed_base64); //FIXME remove
+            ESP_LOGI(BLE_S3_TAG, "RAC %s", seed_base64); //FIXME remove
 
             sprintf(response, "RAC %s", seed_base64);
 
             aes = get_user_AES_ctx(ble_user_addr);
         } else {
-            ESP_LOGE(TAG_BLE, "Disconnected by server! (Error getting session key)");
+            ESP_LOGE(BLE_S3_TAG, "Disconnected by server! (Error getting session key)");
             disconnect_ble_s3();
             return;
         }
@@ -381,11 +383,11 @@ static void process_normal_data(char* data) {
 
         char* cmd = decrypt_base64_AES(aes, data);
 
-        ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
+        ESP_LOGI(BLE_S3_TAG, "After Dec: %s", cmd);
         response = checkCommand(cmd, ble_user_addr, 0); // FIXME remove t1 after
 
     } else {
-        ESP_LOGE(TAG_BLE, "Disconnected by server! (Not CONNECTED)");
+        ESP_LOGE(BLE_S3_TAG, "Disconnected by server! (Not CONNECTED)");
         disconnect_ble_s3();
         return;
     }

@@ -76,7 +76,6 @@ char* addTimestampsAndNonceToMsg(char* msg) {
     char timestamp_str_1[21];
     char timestamp_str_2[21];
     char nonce_str[21];
-
     int now_ts = getNowTimestamp();
 
     sprintf(timestamp_str_1, "%d", now_ts - 30);

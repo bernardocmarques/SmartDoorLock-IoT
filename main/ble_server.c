@@ -73,6 +73,7 @@ void disconnect() {
     disconnect_lock();
 }
 
+bool got_first_invite_session_key = false;
 
 _Noreturn static void echo_task(void *arg) {
     // Configure a temporary buffer for the incoming data
@@ -108,9 +109,49 @@ _Noreturn static void echo_task(void *arg) {
             }
             ESP_LOGI(TAG_BLE, "Received %d bytes: %s", len, data);
 
-            user_state_t state = get_user_state(ble_user);
+
             esp_aes_context aes;
             aes = get_user_AES_ctx(ble_user);
+
+
+            if (get_registration_status() == REGISTERED) {
+                ESP_LOGI(TAG_BLE, "Not auth, First comm");
+
+                if (!got_first_invite_session_key) {
+                    if (retrieve_session_credentials(data, ble_user)) {
+                        response = "ACK";
+
+                        aes = get_user_AES_ctx(ble_user);
+                        got_first_invite_session_key = true;
+                    }  else {
+                        ESP_LOGE(TAG_BLE, "Disconnected by server! (Error getting session key)");
+                        disconnect();
+                        continue;
+                    }
+                } else { // got_first_invite_session_key
+                    got_first_invite_session_key = false;
+                    aes = get_user_AES_ctx(ble_user);
+
+                    char* cmd = decrypt_base64_AES(aes, data);
+
+                    ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
+                    response = checkCommand(cmd, ble_user, 0); // FIXME remove t1 after
+                }
+
+                ESP_LOGI(TAG_BLE, "resp -> %s", response);
+                response_ts = addTimestampsAndNonceToMsg(response);
+
+                response_enc = encrypt_str_AES(aes, response_ts);
+                sendData(response_enc);
+                continue;
+
+            }
+
+
+
+
+            user_state_t state = get_user_state(ble_user);
+
 
             ESP_LOGW(TAG_BLE, "Current state-> %d", state);
             if (state == CONNECTING) {
