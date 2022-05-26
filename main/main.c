@@ -101,6 +101,8 @@ void app_main(void) {
 
     ESP_ERROR_CHECK(nvs_flash_init());
 //    delete_saved_wifi(); // fixme remove
+    delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
+//    restart_esp(3); // fixme remove
 
     wifi_config_t wifiConfig;
     if (get_saved_wifi(&wifiConfig) == ESP_OK) {
@@ -121,7 +123,6 @@ void app_main(void) {
 //    restart_esp(3); // fixme remove
 
 //    create_invite(1, admin, -1, -1, NULL, -1);
-    delete_authorization("I9CUJwR1u2XK0fJ");
     if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         ble_main();
     } else {

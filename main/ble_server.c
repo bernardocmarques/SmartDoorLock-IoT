@@ -97,7 +97,7 @@ _Noreturn static void echo_task(void *arg) {
                     set_current_BLE_addr(ble_user);
                 } else if (strncmp("+DISCONNECT", (char *) data, 13) == 0) {
                     set_user_state(ble_user, DISCONNECTED, "");
-                    set_current_BLE_addr(NULL);
+                    set_current_BLE_addr("");
                     disconnect_lock();
                 }
 

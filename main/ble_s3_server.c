@@ -350,7 +350,6 @@ static void process_normal_data(char* data) {
         response_enc = encrypt_str_AES(aes, response_ts);
         send_data_ble_s3(response_enc);
         return;
-
     }
 
     user_state_t state = get_user_state(ble_user_addr);
@@ -590,9 +589,10 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
             /* start advertising again when missing the connect */
             is_connected = false;
             enable_data_ntf = false;
+
             esp_ble_gap_ext_adv_start(NUM_EXT_ADV_SET, &ext_adv[0]);
 
-            set_current_BLE_addr(NULL);
+            set_current_BLE_addr("");
             set_user_state(ble_user_addr, DISCONNECTED, "");
             disconnect_lock();
             break;
