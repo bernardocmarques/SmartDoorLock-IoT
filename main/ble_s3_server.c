@@ -49,10 +49,16 @@ static const uint16_t spp_service_uuid = 0xffe0;
 
 static uint16_t spp_handle_table[SPP_IDX_NB];
 
+//static uint8_t ext_adv_raw_data[] = {
+//        0x02, 0x01, 0x06,
+//        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd,
+//        0x11, 0X09, 'E', 'S', 'P', '_', 'B', 'L', 'E', '5', '0', '_', 'S', 'E', 'R', 'V', 'E', 'R',
+//};
+
 static uint8_t ext_adv_raw_data[] = {
         0x02, 0x01, 0x06,
-        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd, 0xff,
-        0x11, 0X09, 'E', 'S', 'P', '_', 'B', 'L', 'E', '5', '0', '_', 'S', 'E', 'R', 'V', 'E', 'R',
+        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd,
+        0x11, 0X09, 'S', 'm', 'a', 'r', 't', 'L', 'o', 'c', 'k', 'B', 'L', 'E', '-', 'S', '3', 'R',
 };
 
 
@@ -73,7 +79,7 @@ static char ble_user_addr[18];
 esp_ble_gap_ext_adv_params_t spp_adv_params = {
         .type = ESP_BLE_GAP_SET_EXT_ADV_PROP_CONNECTABLE,
         .interval_min = 0x20,
-        .interval_max = 0x40,
+        .interval_max = 0x20,
         .channel_map = ADV_CHNL_ALL,
         .filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
         .primary_phy = ESP_BLE_GAP_PHY_1M,
@@ -254,7 +260,6 @@ void send_data_ble_s3(char* data) {
     size_t len = strlen(data);
 
     if(len <= (spp_mtu_size - 3)){
-        ESP_LOGE(BLE_S3_TAG, "ainda cabe... %d", spp_mtu_size);
         esp_ble_gatts_send_indicate(spp_gatts_if, spp_conn_id, spp_handle_table[SPP_IDX_SPP_DATA_NTY_VAL], len, (uint8_t*) data, false);
     }else if(len > (spp_mtu_size - 3)){
         if((len%(spp_mtu_size - 3)) == 0){
@@ -320,6 +325,8 @@ static void process_normal_data(char* data) {
     esp_aes_context aes;
 
 
+
+
     if (get_registration_status() == REGISTERED) {
         ESP_LOGI(BLE_S3_TAG, "Not auth, First comm");
 
@@ -356,6 +363,9 @@ static void process_normal_data(char* data) {
     aes = get_user_AES_ctx(ble_user_addr);
 
     ESP_LOGW(BLE_S3_TAG, "State = %d", state);
+
+    heap_caps_check_integrity_all(1); // fixme remove
+
 
     if (state == CONNECTING) {
         if (retrieve_session_credentials(data, ble_user_addr)) {
@@ -410,6 +420,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         case ESP_GAP_BLE_EXT_ADV_DATA_SET_COMPLETE_EVT:
             if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GAP_BLE_EXT_ADV_DATA_SET_COMPLETE_EVT status %d", param->ext_adv_data_set.status);
             esp_ble_gap_ext_adv_start(NUM_EXT_ADV_SET, &ext_adv[0]);
+
             break;
         case ESP_GAP_BLE_EXT_ADV_START_COMPLETE_EVT:
             if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GAP_BLE_EXT_ADV_START_COMPLETE_EVT, status = %d", param->ext_adv_data_set.status);
@@ -475,7 +486,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             break;
         }
         case ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT:
-            if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT, tatus = %x", param->local_privacy_cmpl.status);
+            if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT, status = %x", param->local_privacy_cmpl.status);
             esp_ble_gap_ext_adv_set_params(EXT_ADV_HANDLE, &spp_adv_params);
             break;
         case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:

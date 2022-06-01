@@ -202,7 +202,7 @@ _Noreturn static void echo_task(void *arg) {
 
 
 void createTaskBLE() {
-    xTaskCreate(echo_task, "uart_echo_task", ECHO_TASK_STACK_SIZE, (void*)NULL, 10, &bleTask);
+    xTaskCreate(echo_task, "uart_echo_task", ECHO_TASK_STACK_SIZE, (void*)NULL, 10, NULL);
 }
 
 

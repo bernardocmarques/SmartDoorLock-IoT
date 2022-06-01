@@ -51,7 +51,6 @@ bool checkNonce(long nonce) {
 
     bool valid = temp->nonce != nonce;
     while (temp->next != NULL) {
-        ESP_LOGE("NONCE", "%ld", temp->nonce);
         if (temp->nonce == nonce) {
             valid = false;
         }

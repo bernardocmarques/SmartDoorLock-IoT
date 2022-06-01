@@ -1,16 +1,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <esp_spiffs.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
 #include "tcp_server.c"
 #include "ble_server.c"
 #include "ble_s3_server.c"
-//#include "ble_s3_server(old).c" //fixme remove
 
 #include "esp_touch_util.h"
 #include "wifi_connect_util.h"
@@ -97,6 +93,16 @@ void init_rsa_key() {
     ESP_LOGI(TAG_MAIN, "SPIFFS unmounted");
 }
 
+void init_led_lock_state() {
+    lock_state_t lock_state = get_lock_state();
+
+    if (lock_state == locked) {
+        lock_lock();
+    } else if (lock_state == unlocked) {
+        unlock_lock();
+    }
+}
+
 void app_main(void) {
 
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -113,9 +119,11 @@ void app_main(void) {
         try_to_connect_to_wifi_esp_touch();
     }
 
+    set_led_status(led_idle);
+
     obtain_time();
 
-   init_rsa_key();
+    init_rsa_key();
 
     tcp_main();
 //    heap_caps_check_integrity_all(1); // fixme remove
@@ -131,5 +139,5 @@ void app_main(void) {
 
     ESP_LOGI(TAG_MAIN, "Chega aqui!");
 
-    set_lock_status(idle);
+    init_led_lock_state();
 }

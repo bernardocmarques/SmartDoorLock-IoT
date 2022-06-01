@@ -199,6 +199,58 @@ esp_err_t delete_saved_wifi() {
     return err;
 }
 
+
+lock_state_t get_lock_state() {
+    esp_err_t err = init_nvs();
+
+    if (err != ESP_OK) return err;
+
+    nvs_handle_t my_handle;
+    err = open_nvs("saved_params", &my_handle);
+
+    if (err != ESP_OK) return err;
+    lock_state_t lock_state;
+
+    err = nvs_get_i32(my_handle, "lock_state", &lock_state);
+
+    ESP_LOGE(TAG, "Get lock state %d", lock_state);
+
+
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        lock_lock();
+        lock_state = locked;
+    } else if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error getting lock state: %x", err);
+    }
+
+    return lock_state;
+}
+
+esp_err_t set_lock_state(lock_state_t lock_state) {
+    esp_err_t err = init_nvs();
+    nvs_handle_t my_handle;
+
+    ESP_LOGE(TAG, "Save lock state %d", lock_state);
+
+    if (err != ESP_OK) return err;
+
+    err = open_nvs("saved_params", &my_handle);
+
+    if (err != ESP_OK) return err;
+
+    err = nvs_set_i32(my_handle, "lock_state", lock_state);
+
+    if (err != ESP_OK) return err;
+
+    // Commit
+    err = nvs_commit(my_handle);
+    if (err != ESP_OK) return err;
+
+    // Close
+    nvs_close(my_handle);
+    return err;
+}
+
 // void test() {
 //     esp_err_t err = init_nvs();
 

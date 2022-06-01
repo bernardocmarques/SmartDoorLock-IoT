@@ -5,11 +5,11 @@
 #include "utils/authorization.h"
 #include "utils/utils.h"
 #include "utils/user_info.h"
-#include "utils/lock_status.h"
 #include "utils/time_util.h"
 #include "utils/nonce.h"
 #include "pushingbox_util.h"
 #include "database_util.h"
+#include "nvs_util.h"
 
 #define SEP " "
 
@@ -296,7 +296,36 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free_args(args, 4);
         free(c);
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    }else {
+    } else if (strcmp(c, "RDS") == 0) {
+        char **args = getArgs(cmd, 3);
+
+        if (args == NULL) {
+            free(c);
+            set_BLE_user_state_to_connecting();
+            return NAK_MESSAGE;
+        }
+
+        char* response = NAK_MESSAGE;
+        if (verifyTimestampsAndNonce(args, 0)) {
+            if (get_user_state(user_ip) == AUTHORIZED) {
+                response = malloc(strlen("XXX X") + 1);
+
+                lock_state_t lock_state = get_lock_state();
+
+                ESP_LOGE("STATE -> ", "SDS %d", lock_state);
+
+                sprintf(response, "SDS %d", lock_state);
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+        }
+
+        free_args(args, 3);
+        free(c);
+        set_BLE_user_state_to_connecting();
+        return response;
+    } else {
+        set_BLE_user_state_to_connecting();
         return NAK_MESSAGE;
     }
 	return NAK_MESSAGE;
