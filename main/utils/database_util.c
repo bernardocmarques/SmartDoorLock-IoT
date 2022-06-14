@@ -9,9 +9,13 @@
 #include "cJSON.h"
 #include "base64_util.h"
 #include "nvs_util.h"
+#include "esp_crt_bundle.h"
 
 
-const char* base_url = "http://192.168.1.7:5000";
+
+
+//const char* base_url = "http://192.168.1.7:5000";
+const char* base_url = "https://server.smartlocks.ga";
 
 static const char *TAG = "Database_Util";
 
@@ -91,6 +95,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 }
 
 char* create_invite(int expiration, enum userType user_type, int valid_from, int valid_until, char* weekdays_str, int one_day) {
+    ESP_LOGI(TAG, "Create invite request");
     cJSON* invite_json  = cJSON_CreateObject();
 
     uint8_t mac_array[6] = {0};
@@ -100,7 +105,6 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
         ESP_LOGE(TAG, "Error: Could not get MAC Address");
     }
     sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x", mac_array[0], mac_array[1], mac_array[2], mac_array[3], mac_array[4], mac_array[5]);
-
 
     cJSON_AddItemToObjectCS(invite_json, "smart_lock_MAC", cJSON_CreateString(mac));
     cJSON_AddItemToObjectCS(invite_json, "expiration", cJSON_CreateNumber(expiration));
@@ -120,6 +124,7 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
             .host = base_url,
             .path = "/",
             .event_handler = _http_event_handler,
+            .crt_bundle_attach = esp_crt_bundle_attach,
             .user_data = local_response_buffer
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -127,12 +132,11 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
 
     // POST
     char* path = "/register-invite";
-    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path)));
-
+    char* url = malloc(sizeof(char) * (strlen(base_url) + strlen(path) + 1));
 
     sprintf(url, "%s%s", base_url, path);
-    esp_http_client_set_url(client, url);
 
+    esp_http_client_set_url(client, url);
 
     cJSON* post_data_json  = cJSON_CreateObject();
 
@@ -147,7 +151,6 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
     err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         cJSON* result_json = cJSON_Parse(local_response_buffer);
-
 
         bool success = cJSON_IsTrue(cJSON_GetObjectItem(result_json, "success"));
 
@@ -168,10 +171,13 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
     }
 
 
+
     return NULL;
 }
 
 esp_err_t get_authorization_db(char* username, authorization* auth) {
+    ESP_LOGI(TAG, "Get auth from DB request");
+
     cJSON* authorization_request_json  = cJSON_CreateObject();
 
     uint8_t mac_array[6] = {0};
@@ -196,6 +202,7 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
             .host = base_url,
             .path = "/",
             .event_handler = _http_event_handler,
+            .crt_bundle_attach = esp_crt_bundle_attach,
             .user_data = local_response_buffer
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -239,6 +246,32 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
             uint8_t* master_key = base64_decode(master_key_base64, iv_base64_size, &size);
             memcpy(auth->master_key, master_key, size);
 
+            switch (auth->user_type) {
+                case admin:
+                case owner:
+                    break;
+                case periodic_user:
+                    for (int i=0; i<7; i++) {
+                        auth->weekdays[i] = false;
+                    }
+
+                    int i;
+
+                    cJSON *weekday_json_array = cJSON_GetObjectItem(data_json,"weekdays");
+                    for (i = 0 ; i < cJSON_GetArraySize(weekday_json_array) ; i++) {
+                        int index = (int) cJSON_GetNumberValue(cJSON_GetArrayItem(weekday_json_array, i)) - 1;
+                        auth->weekdays[index] = true;
+                    }
+
+                case tenant:
+                    auth->valid_from_ts = (int) cJSON_GetNumberValue(cJSON_GetObjectItem(data_json, "valid_from"));
+                    auth->valid_until_ts = (int) cJSON_GetNumberValue(cJSON_GetObjectItem(data_json, "valid_until"));
+                    break;
+                case one_time_user:
+                    auth->one_day_ts = (int) cJSON_GetNumberValue(cJSON_GetObjectItem(data_json, "one_day"));
+                    break;
+            }
+
             err = set_authorization(auth);
 
             if (err != ESP_OK) {
@@ -264,6 +297,8 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
 
 
 void register_lock(char* certificate) {
+    ESP_LOGI(TAG, "Register lock request");
+
     cJSON* post_data_json  = cJSON_CreateObject();
 
     uint8_t mac_array[6] = {0};
@@ -284,6 +319,7 @@ void register_lock(char* certificate) {
             .host = base_url,
             .path = "/",
             .event_handler = _http_event_handler,
+            .crt_bundle_attach = esp_crt_bundle_attach,
             .user_data = local_response_buffer
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -333,7 +369,9 @@ void register_lock(char* certificate) {
 
 }
 
-lock_registration_status_t get_registration_status() {
+lock_registration_status_t get_registration_status_server() {
+    ESP_LOGI(TAG, "Get registration status request");
+
     lock_registration_status_t status = UNKNOWN_STATUS;
 
     uint8_t mac_array[6] = {0};
@@ -350,6 +388,7 @@ lock_registration_status_t get_registration_status() {
             .host = base_url,
             .path = "/",
             .event_handler = _http_event_handler,
+            .crt_bundle_attach = esp_crt_bundle_attach,
             .user_data = local_response_buffer
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);

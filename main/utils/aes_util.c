@@ -125,7 +125,6 @@ char* decrypt_base64_AES(esp_aes_context ctx, char* chipertext_and_iv_base64) {
     int iv_base64_size;
 
     pt = strtok(chipertext_and_iv_base64, sep);
-//    char* chipertext_base64 = pt; //FIXME maybe copy
 
     char* chipertext_base64 = malloc(sizeof(char) * (strlen(pt) + 1));
     strcpy(chipertext_base64, pt);

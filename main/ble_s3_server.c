@@ -348,7 +348,7 @@ static void process_normal_data(char* data) {
             char* cmd = decrypt_base64_AES(aes, data);
 
             ESP_LOGI(BLE_S3_TAG, "After Dec: %s", cmd);
-            response = checkCommand(cmd, ble_user_addr, 0); // FIXME remove t1 after
+            response = checkCommand(cmd, ble_user_addr);
         }
 
         ESP_LOGI(BLE_S3_TAG, "resp -> %s", response);
@@ -363,8 +363,6 @@ static void process_normal_data(char* data) {
     aes = get_user_AES_ctx(ble_user_addr);
 
     ESP_LOGW(BLE_S3_TAG, "State = %d", state);
-
-    heap_caps_check_integrity_all(1); // fixme remove
 
 
     if (state == CONNECTING) {
@@ -393,7 +391,7 @@ static void process_normal_data(char* data) {
         char* cmd = decrypt_base64_AES(aes, data);
 
         ESP_LOGI(BLE_S3_TAG, "After Dec: %s", cmd);
-        response = checkCommand(cmd, ble_user_addr, 0); // FIXME remove t1 after
+        response = checkCommand(cmd, ble_user_addr);
 
     } else {
         ESP_LOGE(BLE_S3_TAG, "Disconnected by server! (Not CONNECTED)");

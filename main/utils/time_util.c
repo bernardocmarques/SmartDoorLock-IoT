@@ -62,6 +62,25 @@ int getNowTimestamp() {
     return (int) now;
 }
 
+int getTodayTimestamp() {
+    time_t now = (time_t) getNowTimestamp();
+    struct tm timeinfo;
+
+    localtime_r(&now, &timeinfo);
+    timeinfo.tm_hour = 0;
+    timeinfo.tm_min = 0;
+    timeinfo.tm_sec = 0;
+
+    return (int) mktime(&timeinfo);
+}
+
+int getTodayWeekday() {
+    time_t now = (time_t) getTodayTimestamp();
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    return timeinfo.tm_wday;
+}
+
 void test_time(void)
 {
     time_t now;

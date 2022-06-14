@@ -12,6 +12,7 @@
 #include "wifi_connect_util.h"
 
 #include "utils/database_util.h"
+#include "rsa_util.h"
 
 #define IDF_TARGET      (CONFIG_IDF_TARGET)
 
@@ -108,6 +109,7 @@ void app_main(void) {
     ESP_ERROR_CHECK(nvs_flash_init());
 //    delete_saved_wifi(); // fixme remove
     delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
+    delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
 
     wifi_config_t wifiConfig;
@@ -122,6 +124,11 @@ void app_main(void) {
     set_led_status(led_idle);
 
     obtain_time();
+
+    ESP_LOGI("main", "now -> %d", getNowTimestamp());
+    ESP_LOGI("main", "day -> %d", getTodayTimestamp());
+    ESP_LOGI("main", "wday -> %d", getTodayWeekday());
+
 
     init_rsa_key();
 

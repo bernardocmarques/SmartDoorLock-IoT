@@ -135,7 +135,7 @@ _Noreturn static void echo_task(void *arg) {
                     char* cmd = decrypt_base64_AES(aes, data);
 
                     ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
-                    response = checkCommand(cmd, ble_user, 0); // FIXME remove t1 after
+                    response = checkCommand(cmd, ble_user);
                 }
 
                 ESP_LOGI(TAG_BLE, "resp -> %s", response);
@@ -182,7 +182,7 @@ _Noreturn static void echo_task(void *arg) {
                 aes = get_user_AES_ctx(ble_user);
                 char* cmd = decrypt_base64_AES(aes, data);
                 ESP_LOGI(TAG_BLE, "After Dec: %s", cmd);
-                response = checkCommand(cmd, ble_user, 0); // FIXME remove t1 after
+                response = checkCommand(cmd, ble_user);
             } else {
                 ESP_LOGE(TAG_BLE, "Disconnected by server! (Not CONNECTED)");
                 disconnect();

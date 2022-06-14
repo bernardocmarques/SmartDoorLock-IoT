@@ -16,6 +16,9 @@
 #define ERROR_VERIFYING_TIMESTAMP_AND_NONCE "Message denied due to invalid timestamp or nonce!"
 #define ERROR_FEW_ARGUMENTS "Message expecting %d arguments but only got %d!"
 
+#define ERROR_NO_PERMISSIONS "User don't have permissions to do this operation"
+
+
 static char* getCommand(char* str) {
     char* cmd = malloc(sizeof(char) * strlen(str)+1);
     strcpy(cmd, str);
@@ -38,6 +41,78 @@ bool verifyTimestampsAndNonce(char** args, int first_args_n) {
     }
 
     return valid;
+}
+
+bool canUseLock(char* user_ip) {
+    if (get_user_state(user_ip) != AUTHORIZED) return false;
+    authorization* auth = malloc(sizeof(authorization));
+
+    char* username = get_username(user_ip);
+    if (username == NULL) return false;
+
+    esp_err_t res = get_authorization(username, auth);
+
+    if (res != ESP_OK) return false;
+    int today_ts;
+    int weekday;
+    switch (auth->user_type) {
+
+        case admin:
+        case owner:
+            return true;
+        case periodic_user:
+            weekday = getTodayWeekday();
+
+            if (!auth->weekdays[weekday]) return false;
+        case tenant:
+            today_ts = getTodayTimestamp();
+
+            if (auth->valid_from_ts < today_ts) return false;
+            if (auth->valid_until_ts > today_ts) return false;
+
+            return true;
+        case one_time_user:
+            today_ts = getTodayTimestamp();
+            if (auth->one_day_ts != today_ts) return false;
+
+            return true;
+    }
+    return false;
+}
+
+bool canCreateInvite(char* user_ip, enum userType userType, int valid_from, int valid_until, int one_day) {
+
+    if (get_user_state(user_ip) != AUTHORIZED) return false;
+    authorization* auth = malloc(sizeof(authorization));
+
+    char* username = get_username(user_ip);
+    if (username == NULL) return false;
+
+    esp_err_t res = get_authorization(username, auth);
+
+    if (res != ESP_OK) return false;
+
+    if (auth->user_type < userType) return false;
+
+    switch (auth->user_type) {
+        case admin:
+        case owner:
+            return true;
+        case tenant:
+            if (valid_from < auth->valid_from_ts) return false;
+            if (valid_from > auth->valid_until_ts) return false;
+
+            if (valid_until < auth->valid_from_ts) return false;
+            if (valid_until > auth->valid_until_ts) return false;
+
+            if (one_day < auth->valid_from_ts) return false;
+            if (one_day > auth->valid_until_ts) return false;
+            return true;
+        case periodic_user:
+        case one_time_user:
+            return false;
+    }
+    return false;
 }
 
 
@@ -81,13 +156,13 @@ static void free_args(char** args, int n) {
     free(args);
 }
 
-static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1 after testing
+static char* checkCommand(char* cmd, char* user_ip) {
 
     ESP_LOGW("example", "Received cmd %s", cmd);
 
     char* c = getCommand(cmd);
 
-    if (strcmp(c, "SAC") == 0) {
+    if (strcmp(c, "SAC") == 0) { // Send Auth Credentials
         char** args =  getArgs(cmd, 5);
 
         if (args == NULL) {
@@ -112,7 +187,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free_args(args, 5);
 
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RUD") == 0) {
+    } else if (strcmp(c, "RUD") == 0) { // Request Unlock Door
         char **args = getArgs(cmd, 3);
 
         if (args == NULL) {
@@ -122,9 +197,11 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
 
         bool ack = false;
         if (verifyTimestampsAndNonce(args, 0)) {
-            if (get_user_state(user_ip) == AUTHORIZED) {
+            if (canUseLock(user_ip)) {
                 unlock_lock();
                 ack = true;
+            } else {
+                ESP_LOGE("Error", ERROR_NO_PERMISSIONS);
             }
         } else {
             ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
@@ -133,7 +210,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free(c);
         set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RLD") == 0) {
+    } else if (strcmp(c, "RLD") == 0) { // Request Lock Door
         char **args = getArgs(cmd, 3);
 
         if (args == NULL) {
@@ -143,9 +220,11 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
 
         bool ack = false;
         if (verifyTimestampsAndNonce(args, 0)) {
-            if (get_user_state(user_ip) == AUTHORIZED) {
+            if (canUseLock(user_ip)) {
                 lock_lock();
                 ack = true;
+            } else {
+                ESP_LOGE("Error", ERROR_NO_PERMISSIONS);
             }
         } else {
             ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
@@ -155,7 +234,7 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
         free(c);
         set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RNI") == 0) {
+    } else if (strcmp(c, "RNI") == 0) { // Request New Invite
         int n_args = 0;
 
         if (strncmp("RNI 0", (char *) cmd, 5) == 0) {
@@ -170,16 +249,13 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
             n_args = 5;
         }
 
-
-            char **args = getArgs(cmd, n_args);
+        char **args = getArgs(cmd, n_args);
 
         if (args == NULL) {
             free(c);
             return NAK_MESSAGE;
         }
-
         enum userType user_type = strtol(args[0], NULL, 10);
-
         int valid_from = -1;
         int valid_until = -1;
         char* weekdays_str = NULL;
@@ -207,23 +283,24 @@ static char* checkCommand(char* cmd, char* user_ip, long t1) { //FIXME remove t1
 
         char* response = NAK_MESSAGE;
 
-
         if (verifyTimestampsAndNonce(args, n_args - 3)) {
-            if (get_user_state(user_ip) == AUTHORIZED) {
-                if (get_user_type(get_username(user_ip)) > user_type) { // fixme change permissions verification
+            if (canUseLock(user_ip)) {
+                if (!canCreateInvite(user_ip,  user_type, valid_from, valid_until, one_day)) {
                     ESP_LOGE("Error", "User does not have enough permissions to create this invite.");
                     response = NAK_MESSAGE;
+                } else {
+                    char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
+
+                    response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
+
+                    sprintf(response, "SNI %s", invite_id);
+                    if (invite_id == NULL) {
+                        ESP_LOGE("Error", "Could not create invite");
+                        response = NAK_MESSAGE;
+                    }
                 }
-                char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
-
-                response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
-
-                sprintf(response, "SNI %s", invite_id);
-                if (invite_id == NULL) {
-                    ESP_LOGE("Error", "Could not create invite");
-                    response = NAK_MESSAGE;
-                }
-
+            } else {
+                ESP_LOGE("Error", ERROR_NO_PERMISSIONS);
             }
         } else {
             ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);

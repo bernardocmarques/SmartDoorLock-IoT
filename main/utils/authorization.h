@@ -19,6 +19,10 @@ typedef struct {
     char username[16];
     enum userType user_type;
     uint8_t master_key[KEY_SIZE_BYTES];
+    bool weekdays[7];
+    int valid_from_ts;
+    int valid_until_ts;
+    int one_day_ts;
 } authorization;
 
 

@@ -43,7 +43,6 @@ PKCS7_Padding* addPadding(const void* const data, const uint64_t dataLength, con
 
 PKCS7_unPadding* removePadding(const void* const data, const uint64_t dataLength)
 {
-    heap_caps_check_integrity_all(1); // fixme remove
 
     PKCS7_unPadding* unpaddingResult = (PKCS7_unPadding*) malloc(sizeof(PKCS7_unPadding));
     if (NULL == unpaddingResult)

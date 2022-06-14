@@ -27,18 +27,13 @@
 #include "tcp_server_handler.c"
 #include "utils/utils.h"
 #include "utils/aes_util.h"
-#include "utils/rsa_util.h"
 #include "utils/base64_util.h"
 #include "utils/nvs_util.h"
-#include "utils/authorization.h"
 #include "utils/user_info.h"
 #include "utils/pushingbox_util.h"
-#include "esp_sntp.h"
-
-#include "mbedtls/md.h" //FIXME remove
 
 
-#include "ccomp_timer.h" //FIXME remove
+
 #include "time_util.h"
 
 #define PORT                        CONFIG_EXAMPLE_PORT
@@ -48,7 +43,6 @@
 
 const static char* TAG_TCP = "TAG_TCP";
 
-static long t1 = 0; //TODO remove timer
 
 char addr_str[45];
 
@@ -93,16 +87,12 @@ static void do_retransmit(const int sock) {
 
                     response = malloc((sizeof(char) * 5) + base64_size);
 
-//                    ESP_LOGI(TAG_TCP, "RAC %s", seed_base64); //FIXME remove
 
                     sprintf(response, "RAC %s", seed_base64);
 
 //                    free(auth_seed);
 //                    free(seed_base64);
 
-//                    t1 = (long) ccomp_timer_stop(); //FIXME remove
-//                    ESP_LOGE(TAG_TCP, "Time to get credentials: %ld", t1); //FIXME remove
-//                    ccomp_timer_start(); //FIXME remove
 
                     aes = get_user_AES_ctx(addr_str);
                 } else {
@@ -114,7 +104,7 @@ static void do_retransmit(const int sock) {
                 aes = get_user_AES_ctx(addr_str);
                 char* cmd = decrypt_base64_AES(aes, rx_buffer);
                 ESP_LOGI(TAG_TCP, "After Dec: %s", cmd);
-                response = checkCommand(cmd, addr_str, t1); // FIXME remove t1 after
+                response = checkCommand(cmd, addr_str);
             } else {
                 ESP_LOGE(TAG_TCP, "Disconnected by server! (Not CONNECTED)");
                 disconnect_sock(sock);
@@ -230,10 +220,6 @@ static void tcp_server_task(void *pvParameters) {
         ESP_LOGI(TAG_TCP, "Socket accepted ip address: %s", addr_str);
 
         set_user_state(addr_str, CONNECTING, "");
-
-        ccomp_timer_start(); //FIXME remove timer
-        ESP_LOGE(TAG_TCP, "TIMERS: %ld", (long) ccomp_timer_stop()); //FIXME remove timer
-        ccomp_timer_start(); //FIXME remove timer
 
         do_retransmit(sock);
 

@@ -9,6 +9,7 @@
 #include "rsa_util.h"
 #include "base64_util.h"
 #include "user_info.h"
+#include "database_util.h"
 
 static const char *TAG = "Utils";
 
@@ -24,7 +25,7 @@ void restart_esp(int delay_seconds) {
         ESP_LOGI(TAG, "Restarting in %d seconds...", delay_seconds);
     }
     sleep(delay_seconds);
-    esp_restart(); // fixme remove
+    esp_restart();
 }
 
 
@@ -134,3 +135,16 @@ int retrieve_session_credentials(char* cred_enc, char* user_addr) {
     set_user_state(user_addr, CONNECTED, "");
     return 1;
 }
+
+
+/********************* Registration Status ***********************/
+
+lock_registration_status_t registration_status = UNKNOWN_STATUS;
+
+lock_registration_status_t get_registration_status() {
+    if (registration_status == UNKNOWN_STATUS) {
+        registration_status = get_registration_status_server();
+    }
+    return registration_status;
+}
+
