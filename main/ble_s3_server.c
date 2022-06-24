@@ -22,6 +22,7 @@
 #include "sdkconfig.h"
 #include "utils/utils.h"
 #include "base64_util.h"
+#include "wifi_connect_util.h"
 
 #define BLE_S3_TAG  "BLE_S3_SERVER"
 
@@ -49,18 +50,13 @@ static const uint16_t spp_service_uuid = 0xffe0;
 
 static uint16_t spp_handle_table[SPP_IDX_NB];
 
-//static uint8_t ext_adv_raw_data[] = {
-//        0x02, 0x01, 0x06,
-//        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd,
-//        0x11, 0X09, 'E', 'S', 'P', '_', 'B', 'L', 'E', '5', '0', '_', 'S', 'E', 'R', 'V', 'E', 'R',
-//};
 
-static uint8_t ext_adv_raw_data[] = {
+static uint8_t ext_adv_raw_data_template[] = {
         0x02, 0x01, 0x06,
-        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd,
-        0x11, 0X09, 'S', 'm', 'a', 'r', 't', 'L', 'o', 'c', 'k', 'B', 'L', 'E', '-', 'S', '3', 'R',
-};
+        0x03, 0x03, 0xe0, 0xff,
+        0x10, 0x09, 'S', 'm', 'a', 'r', 't', 'L', 'o', 'c', 'k', 'B', 'L', 'E', '-', 'S', '3',
 
+};
 
 static esp_ble_gap_ext_adv_t ext_adv[1] = {
         [0] = {EXT_ADV_HANDLE, EXT_ADV_DURATION, EXT_ADV_MAX_EVENTS},
@@ -316,6 +312,11 @@ bool got_first_invite_session_key_s3 = false;
 
 static void process_normal_data(char* data) {
 
+    if (!isWifiConnected()) {
+        ESP_LOGE(BLE_S3_TAG, "Rejected BLE message, lock not ready yet!");
+        return;
+    }
+
     ESP_LOGI(BLE_S3_TAG, "DATA ----> %s", data);
 
     char* response;
@@ -325,9 +326,7 @@ static void process_normal_data(char* data) {
     esp_aes_context aes;
 
 
-
-
-    if (get_registration_status() == REGISTERED) {
+    if (get_registration_status() == REGISTERED && force_get_registration_status() == REGISTERED) {
         ESP_LOGI(BLE_S3_TAG, "Not auth, First comm");
 
         if (!got_first_invite_session_key_s3) {
@@ -356,12 +355,14 @@ static void process_normal_data(char* data) {
 
         response_enc = encrypt_str_AES(aes, response_ts);
         send_data_ble_s3(response_enc);
+        force_get_registration_status();
         return;
     }
 
     user_state_t state = get_user_state(ble_user_addr);
     aes = get_user_AES_ctx(ble_user_addr);
 
+    heap_caps_check_integrity_all(1); // fixme remove
     ESP_LOGW(BLE_S3_TAG, "State = %d", state);
 
 
@@ -413,7 +414,26 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     switch (event) {
         case ESP_GAP_BLE_EXT_ADV_SET_PARAMS_COMPLETE_EVT:
             if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GAP_BLE_EXT_ADV_SET_PARAMS_COMPLETE_EVT status %d", param->ext_adv_set_params.status);
-            esp_ble_gap_config_ext_adv_data_raw(EXT_ADV_HANDLE,  sizeof(ext_adv_raw_data), &ext_adv_raw_data[0]);
+
+
+            uint8_t mac_array[6] = {0};
+            esp_err_t err = esp_read_mac(mac_array, ESP_MAC_WIFI_STA);
+
+            if (err == ERR_OK) {
+                uint8_t data_header[4] = {0x09, 0xff, 0xff, 0xff,};
+
+                uint8_t* ext_adv_raw_data = malloc(sizeof(ext_adv_raw_data_template) + 6 + 4);
+
+                memcpy(ext_adv_raw_data, ext_adv_raw_data_template, sizeof(ext_adv_raw_data_template));
+                memcpy(ext_adv_raw_data + sizeof(ext_adv_raw_data_template), data_header, sizeof(data_header));
+                memcpy(ext_adv_raw_data + sizeof(ext_adv_raw_data_template) + 4 , mac_array, sizeof(mac_array));
+
+                esp_ble_gap_config_ext_adv_data_raw(EXT_ADV_HANDLE,  sizeof(ext_adv_raw_data_template) + 6 + 4, &ext_adv_raw_data[0]);
+                free(ext_adv_raw_data);
+            } else {
+                esp_ble_gap_config_ext_adv_data_raw(EXT_ADV_HANDLE,  sizeof(ext_adv_raw_data_template), &ext_adv_raw_data_template[0]);
+            }
+
             break;
         case ESP_GAP_BLE_EXT_ADV_DATA_SET_COMPLETE_EVT:
             if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GAP_BLE_EXT_ADV_DATA_SET_COMPLETE_EVT status %d", param->ext_adv_data_set.status);
@@ -544,7 +564,6 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
                 }
                 else if(res == SPP_IDX_SPP_DATA_RECV_VAL) { // if data recieved is normal data
                     char* data = (char *)(p_data->write.value);
-
                     //TODO check for EOT char
 
                     process_normal_data(data);
@@ -667,9 +686,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
 }
 
 
-
-void ble_s3_main(void)
-{
+void ble_s3_main(void) {
     esp_err_t ret;
 
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
@@ -708,6 +725,7 @@ void ble_s3_main(void)
         ESP_LOGE(BLE_S3_TAG, "gap register error, error code = %x", ret);
         return;
     }
+
     ret = esp_ble_gatts_app_register(ESP_SPP_APP_ID);
     if (ret){
         ESP_LOGE(BLE_S3_TAG, "gatts app register error, error code = %x", ret);
@@ -737,5 +755,9 @@ void ble_s3_main(void)
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
 
-    spp_task_init();
+//    spp_task_init();
 }
+
+
+
+

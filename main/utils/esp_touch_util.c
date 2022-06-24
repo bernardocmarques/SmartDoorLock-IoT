@@ -13,6 +13,7 @@
 #include "esp_smartconfig.h"
 #include "nvs_util.h"
 #include "esp_touch_util.h"
+#include "wifi_connect_util.h"
 
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */

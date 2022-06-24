@@ -87,6 +87,7 @@ void init_rsa_key() {
         ESP_LOGI(TAG_MAIN, "Read from cert:\n%s", buf);
 
         register_lock(buf);
+        force_get_registration_status();
     }
 
     // All done, unmount partition and disable SPIFFS
@@ -112,6 +113,12 @@ void app_main(void) {
     delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
 
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
+        ble_main();
+    } else {
+        ble_s3_main();
+    }
+
     wifi_config_t wifiConfig;
     if (get_saved_wifi(&wifiConfig) == ESP_OK) {
         if(!connect_to_wifi(wifiConfig)) {
@@ -121,30 +128,29 @@ void app_main(void) {
         try_to_connect_to_wifi_esp_touch();
     }
 
+
     set_led_status(led_idle);
 
     obtain_time();
 
-    ESP_LOGI("main", "now -> %d", getNowTimestamp());
-    ESP_LOGI("main", "day -> %d", getTodayTimestamp());
-    ESP_LOGI("main", "wday -> %d", getTodayWeekday());
-
-
     init_rsa_key();
 
     tcp_main();
+
+    setWifiConnected(true);
+
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
+        sendData("LOK");
+    } else {
+        send_data_ble_s3("LOK");
+    }
+
+
 //    heap_caps_check_integrity_all(1); // fixme remove
 
 //    restart_esp(3); // fixme remove
 
 //    create_invite(1, admin, -1, -1, NULL, -1);
-    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
-        ble_main();
-    } else {
-        ble_s3_main();
-    }
-
-    ESP_LOGI(TAG_MAIN, "Chega aqui!");
 
     init_led_lock_state();
 }

@@ -24,5 +24,5 @@ void restart_esp(int delay_seconds);
 uint8_t* get_random_array(int len);
 int retrieve_session_credentials(char* cred_enc, char* user_addr);
 lock_registration_status_t get_registration_status();
-
+lock_registration_status_t force_get_registration_status();
 #endif // UTILS_H

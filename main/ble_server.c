@@ -12,6 +12,7 @@
 #include "esp_log.h"
 #include "utils/utils.h"
 #include "base64_util.h"
+#include "wifi_connect_util.h"
 //
 #define TXD_PIN (CONFIG_EXAMPLE_UART_TXD)
 #define RXD_PIN (CONFIG_EXAMPLE_UART_RXD)
@@ -76,6 +77,9 @@ void disconnect() {
 bool got_first_invite_session_key = false;
 
 _Noreturn static void echo_task(void *arg) {
+
+
+
     // Configure a temporary buffer for the incoming data
     char* data = (char *) malloc(BUF_SIZE);
     char* response;
@@ -85,6 +89,10 @@ _Noreturn static void echo_task(void *arg) {
     ESP_LOGI(TAG_BLE, "Server BLE running!");
 
     while (1) {
+
+        if (!isWifiConnected()) continue;
+
+
         // Read data from the UART
         int len = uart_read_bytes(ECHO_UART_PORT_NUM, data, (BUF_SIZE - 1), 250 / portTICK_RATE_MS);
         // Write data back to the UART

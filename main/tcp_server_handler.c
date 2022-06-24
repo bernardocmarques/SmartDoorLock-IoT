@@ -14,6 +14,7 @@
 #define SEP " "
 
 #define ERROR_VERIFYING_TIMESTAMP_AND_NONCE "Message denied due to invalid timestamp or nonce!"
+#define ERROR_AUTH_CODE_NOT_VALID "Authorization code not valid!"
 #define ERROR_FEW_ARGUMENTS "Message expecting %d arguments but only got %d!"
 
 #define ERROR_NO_PERMISSIONS "User don't have permissions to do this operation"
@@ -64,6 +65,7 @@ bool canUseLock(char* user_ip) {
             weekday = getTodayWeekday();
 
             if (!auth->weekdays[weekday]) return false;
+            // fall through
         case tenant:
             today_ts = getTodayTimestamp();
 
@@ -92,7 +94,7 @@ bool canCreateInvite(char* user_ip, enum userType userType, int valid_from, int 
 
     if (res != ESP_OK) return false;
 
-    if (auth->user_type < userType) return false;
+    if (auth->user_type > userType) return false;
 
     switch (auth->user_type) {
         case admin:
@@ -178,7 +180,11 @@ static char* checkCommand(char* cmd, char* user_ip) {
         if (verifyTimestampsAndNonce(args, 2)) {
             uint8_t* auth_seed = get_user_seed(user_ip);
             is_valid = check_authorization_code(username, auth_code, auth_seed);
-            if (is_valid) set_user_state(user_ip, AUTHORIZED, username);
+            if (is_valid) {
+                set_user_state(user_ip, AUTHORIZED, username);
+            } else {
+                ESP_LOGE("Error", ERROR_AUTH_CODE_NOT_VALID);
+            }
         } else {
             ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
         }

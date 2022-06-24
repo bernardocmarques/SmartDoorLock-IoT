@@ -22,6 +22,8 @@
 static EventGroupHandle_t s_wifi_event_group;
 esp_netif_t* m_esp_netif_sta;
 
+static bool isConnected = false;
+
 
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
@@ -75,6 +77,14 @@ void terminate_wifi() {
 
 
 
+}
+
+bool isWifiConnected() {
+    return isConnected;
+}
+
+void setWifiConnected(bool connected) {
+    isConnected = connected;
 }
 
 bool wifi_init_sta(wifi_config_t wifiConfig) {
@@ -148,7 +158,10 @@ bool wifi_init_sta(wifi_config_t wifiConfig) {
     }
 }
 
+
 bool connect_to_wifi(wifi_config_t wifiConfig) {
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    return wifi_init_sta(wifiConfig);
+
+    isConnected = wifi_init_sta(wifiConfig);
+    return isConnected;
 }
