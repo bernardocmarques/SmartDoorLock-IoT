@@ -90,6 +90,11 @@ _Noreturn static void echo_task(void *arg) {
 
     while (1) {
 
+        if (strcmp(data, "PNG") == 0) {
+            sendData("LOK");
+            continue;
+        }
+
         if (!isWifiConnected()) continue;
 
 

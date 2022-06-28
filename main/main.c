@@ -113,8 +113,8 @@ void app_main(void) {
     delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
 
-    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
-        ble_main();
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {  // fixme uncomment
+        // pass
     } else {
         ble_s3_main();
     }
@@ -139,9 +139,10 @@ void app_main(void) {
 
     setWifiConnected(true);
 
-    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
-        sendData("LOK");
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) { // fixme change and uncomment
+        ble_main();
     } else {
+        server_online = true;
         send_data_ble_s3("LOK");
     }
 

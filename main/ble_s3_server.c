@@ -250,6 +250,11 @@ void send_data_ble_s3(char* data) {
     uint8_t current_num = 0;
     uint8_t * data_frag = NULL;
 
+    if (!is_connected) {
+        ESP_LOGW(BLE_S3_TAG, "Data not sent, BLE device not connected!");
+        return;
+    }
+
     char EOT = '\4';
     strncat(data, &EOT, 1);
 
@@ -308,9 +313,15 @@ static void spp_task_init(void) {
     xTaskCreate(spp_cmd_task, "spp_cmd_task", 2048, NULL, 10, NULL);
 }
 
+bool server_online = false;
 bool got_first_invite_session_key_s3 = false;
 
 static void process_normal_data(char* data) {
+
+    if (strcmp(data, "PNG") == 0) {
+        send_data_ble_s3(server_online ? "LOK" : "LNO");
+        return;
+    }
 
     if (!isWifiConnected()) {
         ESP_LOGE(BLE_S3_TAG, "Rejected BLE message, lock not ready yet!");

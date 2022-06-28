@@ -236,7 +236,7 @@ CLEAN_UP:
 
 void tcp_main(void) {
     #ifdef CONFIG_EXAMPLE_IPV4
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
+    xTaskCreate(tcp_server_task, "tcp_server", 8192, (void*)AF_INET, 5, NULL);
     #endif
     #ifdef CONFIG_EXAMPLE_IPV6
      xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
