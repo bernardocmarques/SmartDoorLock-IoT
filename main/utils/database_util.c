@@ -94,7 +94,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-char* create_invite(int expiration, enum userType user_type, int valid_from, int valid_until, char* weekdays_str, int one_day) {
+char* create_invite(int expiration, enum userType user_type, int valid_from, int valid_until, char* weekdays_str, int one_day, char* email_locked) {
     ESP_LOGI(TAG, "Create invite request");
     cJSON* invite_json  = cJSON_CreateObject();
 
@@ -108,6 +108,7 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
 
     cJSON_AddItemToObjectCS(invite_json, "smart_lock_MAC", cJSON_CreateString(mac));
     cJSON_AddItemToObjectCS(invite_json, "expiration", cJSON_CreateNumber(expiration));
+    if (email_locked != NULL) cJSON_AddItemToObjectCS(invite_json, "email_locked", cJSON_CreateString(email_locked));
     cJSON_AddItemToObjectCS(invite_json, "type", cJSON_CreateNumber(user_type));
     if (valid_from != -1 ) cJSON_AddItemToObjectCS(invite_json, "valid_from", cJSON_CreateNumber(valid_from));
     if (valid_from != -1 ) cJSON_AddItemToObjectCS(invite_json, "valid_until", cJSON_CreateNumber(valid_until));
@@ -296,7 +297,7 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
 }
 
 
-void register_lock(char* certificate) {
+void register_lock(char* certificate, char* ble_mac) {
     ESP_LOGI(TAG, "Register lock request");
 
     cJSON* post_data_json  = cJSON_CreateObject();
@@ -311,6 +312,7 @@ void register_lock(char* certificate) {
 
 
     cJSON_AddItemToObjectCS(post_data_json, "MAC", cJSON_CreateString(mac));
+    cJSON_AddItemToObjectCS(post_data_json, "BLE", cJSON_CreateString(ble_mac));
     cJSON_AddItemToObjectCS(post_data_json, "certificate", cJSON_CreateString(certificate));
     free(certificate);
     char local_response_buffer[500] = {0};

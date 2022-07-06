@@ -80,13 +80,29 @@ void init_rsa_key() {
             return;
         }
 
+        char ble_mac[18];
+
+
+        if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
+            // todo get ble addrs if esp32-s2
+        } else {
+            uint8_t ble_mac_array[6] = {0};
+
+            esp_err_t err = esp_read_mac(ble_mac_array, ESP_MAC_BT);
+            if (err != ESP_OK) {
+                ESP_LOGE(TAG_MAIN, "Error: Could not get BLE Address");
+            }
+            sprintf(ble_mac, "%02x:%02x:%02x:%02x:%02x:%02x", ble_mac_array[0], ble_mac_array[1], ble_mac_array[2], ble_mac_array[3], ble_mac_array[4], ble_mac_array[5]);
+        }
+
+
         memset(buf, 0, buf_size);
         fread(buf, 1, buf_size, f_cert);
         fclose(f_cert);
 
         ESP_LOGI(TAG_MAIN, "Read from cert:\n%s", buf);
 
-        register_lock(buf);
+        register_lock(buf, ble_mac);
         force_get_registration_status();
     }
 
@@ -113,7 +129,7 @@ void app_main(void) {
     delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
 
-    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {  // fixme uncomment
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         // pass
     } else {
         ble_s3_main();
@@ -139,7 +155,7 @@ void app_main(void) {
 
     setWifiConnected(true);
 
-    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) { // fixme change and uncomment
+    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         ble_main();
     } else {
         server_online = true;

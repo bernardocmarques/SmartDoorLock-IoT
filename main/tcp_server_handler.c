@@ -295,7 +295,7 @@ static char* checkCommand(char* cmd, char* user_ip) {
                     ESP_LOGE("Error", "User does not have enough permissions to create this invite.");
                     response = NAK_MESSAGE;
                 } else {
-                    char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
+                    char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day, NULL);
 
                     response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
@@ -342,7 +342,7 @@ static char* checkCommand(char* cmd, char* user_ip) {
 
         if (verifyTimestampsAndNonce(args, n_args - 3)) {
 
-            char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day);
+            char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day, NULL);
 
             response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
@@ -357,6 +357,114 @@ static char* checkCommand(char* cmd, char* user_ip) {
         }
         free_args(args, n_args);
         free(c);
+        return response;
+    } else if (strcmp(c, "RLD") == 0) { // Request Lock Door
+        char **args = getArgs(cmd, 3);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
+        bool ack = false;
+        if (verifyTimestampsAndNonce(args, 0)) {
+            if (canUseLock(user_ip)) {
+                lock_lock();
+                ack = true;
+            } else {
+                ESP_LOGE("Error", ERROR_NO_PERMISSIONS);
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+
+        }
+        free_args(args, 3);
+        free(c);
+        set_BLE_user_state_to_connecting();
+        return ack ? ACK_MESSAGE : NAK_MESSAGE;
+    } else if (strcmp(c, "RUI") == 0) { // Request User Invite
+        char **args = getArgs(cmd, 4);
+
+        if (args == NULL) {
+            free(c);
+            return NAK_MESSAGE;
+        }
+
+        if (get_user_state(user_ip) != AUTHORIZED) return false;
+        authorization* auth = malloc(sizeof(authorization));
+
+        char* username = get_username(user_ip);
+        if (username == NULL) return false;
+
+        esp_err_t res = get_authorization(username, auth);
+
+        if (res != ESP_OK) return false;
+
+        char* email = args[0];
+
+
+        enum userType user_type = auth->user_type;
+
+        int valid_from = -1;
+        int valid_until = -1;
+        char* weekdays_str = NULL;
+        int one_day = -1;
+
+        switch (user_type) {
+            case admin:
+            case owner:
+                break;
+            case periodic_user:
+
+                weekdays_str = malloc(7 * sizeof(char) + 1);
+
+                char str[12];
+                for (int i = 0; i < 7; i++) {
+                    if (auth->weekdays[i]) {
+                        sprintf(str, "%d", i+1);
+                        strcat(weekdays_str, str);
+                    }
+                }
+
+            case tenant:
+                valid_from = auth->valid_from_ts;
+                valid_until = auth->valid_until_ts;
+                break;
+            case one_time_user:
+                one_day = auth->one_day_ts;
+                break;
+            default:
+                break;
+        }
+
+        char* response = NAK_MESSAGE;
+
+        if (verifyTimestampsAndNonce(args, 1)) {
+            if (canUseLock(user_ip)) {
+                if (!canCreateInvite(user_ip,  user_type, valid_from, valid_until, one_day)) {
+                    ESP_LOGE("Error", "User does not have enough permissions to create this invite.");
+                    response = NAK_MESSAGE;
+                } else {
+                    char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day, email);
+
+                    response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
+
+                    sprintf(response, "SUI %s", invite_id);
+                    if (invite_id == NULL) {
+                        ESP_LOGE("Error", "Could not create invite");
+                        response = NAK_MESSAGE;
+                    }
+                }
+            } else {
+                ESP_LOGE("Error", ERROR_NO_PERMISSIONS);
+            }
+        } else {
+            ESP_LOGE("Error", ERROR_VERIFYING_TIMESTAMP_AND_NONCE);
+        }
+
+        free_args(args, 4);
+        free(c);
+        set_BLE_user_state_to_connecting();
         return response;
     } else if (strcmp(c, "SNT") == 0) {
         char **args = getArgs(cmd, 4);
