@@ -15,7 +15,7 @@ typedef enum {  // order of permissions. 3 is higher than 2, AUTHORIZED is highe
 
 typedef struct {
     char user_ip[45];
-    char username[16];
+    char phone_id[16];
     user_state_t state;   
     uint8_t* seed;   
     esp_aes_context AES_ctx;
@@ -39,7 +39,7 @@ user_info_hash_t* get_user_info(char* user_ip);
 user_state_t get_user_state(char* user_ip);
 uint8_t* get_user_seed(char* user_ip);
 esp_aes_context get_user_AES_ctx(char* user_ip);
-char* get_username(char* user_ip);
+char* get_phone_id(char* user_ip);
 char* get_current_BLE_addr();
 
 

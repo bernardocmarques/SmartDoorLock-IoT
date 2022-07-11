@@ -39,7 +39,7 @@ esp_err_t open_nvs(const char* namespace, nvs_handle_t* my_handle) {
 }
 
 
-esp_err_t get_authorization(const char* username, authorization* auth) {
+esp_err_t get_authorization(const char* phone_id, authorization* auth) {
     esp_err_t err = init_nvs();
 
     if (err != ESP_OK) return err;
@@ -51,17 +51,17 @@ esp_err_t get_authorization(const char* username, authorization* auth) {
 
 
     size_t required_size = 0;  // value will default to 0, if not set yet in NVS    
-    err = nvs_get_blob(my_handle, username, NULL, &required_size);
+    err = nvs_get_blob(my_handle, phone_id, NULL, &required_size);
     
     if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) return err;
 
 
     if (required_size == 0) {
-        ESP_LOGE(TAG, "Authorization for user %s does not exist!", username);
+        ESP_LOGE(TAG, "Authorization for user %s does not exist!", phone_id);
         return err;
     } else {
 
-        err = nvs_get_blob(my_handle, username, auth, &required_size);
+        err = nvs_get_blob(my_handle, phone_id, auth, &required_size);
 
         if (err != ESP_OK) {
             free(auth);
@@ -85,7 +85,7 @@ esp_err_t set_authorization(authorization* auth) {
 
     size_t required_size = sizeof(authorization);
 
-    err = nvs_set_blob(my_handle, auth->username, auth, required_size);
+    err = nvs_set_blob(my_handle, auth->phone_id, auth, required_size);
     
     if (err != ESP_OK) return err;
 
@@ -98,7 +98,7 @@ esp_err_t set_authorization(authorization* auth) {
     return err;
 }
 
-esp_err_t delete_authorization(char* username) {
+esp_err_t delete_authorization(char* phone_id) {
     esp_err_t err = init_nvs();
     nvs_handle_t my_handle;
 
@@ -108,7 +108,7 @@ esp_err_t delete_authorization(char* username) {
 
     if (err != ESP_OK) return err;
 
-    err = nvs_erase_key(my_handle, username);
+    err = nvs_erase_key(my_handle, phone_id);
     if (err != ESP_OK) return err;
 
     // Commit
@@ -279,7 +279,7 @@ esp_err_t set_lock_state(lock_state_t lock_state) {
 //             return err;
 //         }
         
-//         ESP_LOGI(TAG, "username: %s", auth->username);
+//         ESP_LOGI(TAG, "phone_id: %s", auth->phone_id);
 
 //         free(auth);
 //     }

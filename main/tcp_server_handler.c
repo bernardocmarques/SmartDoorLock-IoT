@@ -48,10 +48,10 @@ bool canUseLock(char* user_ip) {
     if (get_user_state(user_ip) != AUTHORIZED) return false;
     authorization* auth = malloc(sizeof(authorization));
 
-    char* username = get_username(user_ip);
-    if (username == NULL) return false;
+    char* phone_id = get_phone_id(user_ip);
+    if (phone_id == NULL) return false;
 
-    esp_err_t res = get_authorization(username, auth);
+    esp_err_t res = get_authorization(phone_id, auth);
 
     if (res != ESP_OK) return false;
     int today_ts;
@@ -87,10 +87,10 @@ bool canCreateInvite(char* user_ip, enum userType userType, int valid_from, int 
     if (get_user_state(user_ip) != AUTHORIZED) return false;
     authorization* auth = malloc(sizeof(authorization));
 
-    char* username = get_username(user_ip);
-    if (username == NULL) return false;
+    char* phone_id = get_phone_id(user_ip);
+    if (phone_id == NULL) return false;
 
-    esp_err_t res = get_authorization(username, auth);
+    esp_err_t res = get_authorization(phone_id, auth);
 
     if (res != ESP_OK) return false;
 
@@ -172,16 +172,16 @@ static char* checkCommand(char* cmd, char* user_ip) {
             return NAK_MESSAGE;
         }
 
-        char* username = args[0];
+        char* phone_id = args[0];
         char* auth_code = args[1];
 
 
         int is_valid = 0;
         if (verifyTimestampsAndNonce(args, 2)) {
             uint8_t* auth_seed = get_user_seed(user_ip);
-            is_valid = check_authorization_code(username, auth_code, auth_seed);
+            is_valid = check_authorization_code(phone_id, auth_code, auth_seed);
             if (is_valid) {
-                set_user_state(user_ip, AUTHORIZED, username);
+                set_user_state(user_ip, AUTHORIZED, phone_id);
             } else {
                 ESP_LOGE("Error", ERROR_AUTH_CODE_NOT_VALID);
             }
@@ -393,10 +393,10 @@ static char* checkCommand(char* cmd, char* user_ip) {
         if (get_user_state(user_ip) != AUTHORIZED) return false;
         authorization* auth = malloc(sizeof(authorization));
 
-        char* username = get_username(user_ip);
-        if (username == NULL) return false;
+        char* phone_id = get_phone_id(user_ip);
+        if (phone_id == NULL) return false;
 
-        esp_err_t res = get_authorization(username, auth);
+        esp_err_t res = get_authorization(phone_id, auth);
 
         if (res != ESP_OK) return false;
 

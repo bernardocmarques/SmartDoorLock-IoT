@@ -13,20 +13,20 @@ void print_authorization(authorization* auth) {
     size_t base64_size;
     char* master_key_base64 = base64_encode(auth->master_key, sizeof(uint8_t) * KEY_SIZE_BYTES, &base64_size);
 
-    ESP_LOGI("Authorization", "User with ID %s with type %d has the following master key: %s", auth->username, auth->user_type, master_key_base64);
+    ESP_LOGI("Authorization", "User with ID %s with type %d has the following master key: %s", auth->phone_id, auth->user_type, master_key_base64);
 }
 
 
-int check_authorization_code(char* username, char* auth_code_base64, uint8_t* seed) {
+int check_authorization_code(char* phone_id, char* auth_code_base64, uint8_t* seed) {
 
     
     authorization* auth = malloc(sizeof(authorization));
 
-    esp_err_t err = get_authorization(username, auth);
+    esp_err_t err = get_authorization(phone_id, auth);
 
     if (err != ESP_OK) {
         ESP_LOGI(TAG, "Get authorization from database.");
-        err = get_authorization_db(username, auth);
+        err = get_authorization_db(phone_id, auth);
 
         print_authorization(auth);
         if (err != ESP_OK) {
@@ -62,10 +62,10 @@ int check_authorization_code(char* username, char* auth_code_base64, uint8_t* se
     }
 }
 
-enum userType get_user_type(char* username) {
+enum userType get_user_type(char* phone_id) {
     authorization* auth = malloc(sizeof(authorization));
 
-    esp_err_t err = get_authorization(username, auth);
+    esp_err_t err = get_authorization(phone_id, auth);
 
     if (err != ESP_OK) {
         free(auth);

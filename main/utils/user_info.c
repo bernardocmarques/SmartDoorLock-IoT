@@ -11,7 +11,7 @@ char current_BLE_addr[18] = "";
 
 /* Setters */
 
-void set_user_state(char* user_ip, user_state_t state, char* username) {
+void set_user_state(char* user_ip, user_state_t state, char* phone_id) {
     user_info_hash_t* user_info;
 
     HASH_FIND_INT(users_info, user_ip, user_info);
@@ -23,7 +23,7 @@ void set_user_state(char* user_ip, user_state_t state, char* username) {
     }
 
     user_info->state = state;
-    strcpy(user_info->username, username);
+    strcpy(user_info->phone_id, phone_id);
 
 }
 
@@ -85,11 +85,11 @@ user_state_t get_user_state(char* user_ip) {
     return user_info->state;
 }
 
-char* get_username(char* user_ip) {
+char* get_phone_id(char* user_ip) {
     user_info_hash_t* user_info;
 
     HASH_FIND_INT(users_info, user_ip, user_info);
-    return strlen(user_info->username) != 0 ? user_info->username : NULL;
+    return strlen(user_info->phone_id) != 0 ? user_info->phone_id : NULL;
 }
 
 uint8_t* get_user_seed(char* user_ip) {

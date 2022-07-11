@@ -176,7 +176,7 @@ char* create_invite(int expiration, enum userType user_type, int valid_from, int
     return NULL;
 }
 
-esp_err_t get_authorization_db(char* username, authorization* auth) {
+esp_err_t get_authorization_db(char* phone_id, authorization* auth) {
     ESP_LOGI(TAG, "Get auth from DB request");
 
     cJSON* authorization_request_json  = cJSON_CreateObject();
@@ -191,7 +191,7 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
 
 
     cJSON_AddItemToObjectCS(authorization_request_json, "smart_lock_MAC", cJSON_CreateString(mac));
-    cJSON_AddItemToObjectCS(authorization_request_json, "username", cJSON_CreateString(username));
+    cJSON_AddItemToObjectCS(authorization_request_json, "phone_id", cJSON_CreateString(phone_id));
 
     char* authorization_request = cJSON_PrintUnformatted(authorization_request_json);
 
@@ -237,7 +237,7 @@ esp_err_t get_authorization_db(char* username, authorization* auth) {
         if (success) {
             cJSON* data_json = cJSON_GetObjectItem(result_json, "data");
 
-            strcpy(auth->username, cJSON_GetStringValue(cJSON_GetObjectItem(data_json, "username")));
+            strcpy(auth->phone_id, cJSON_GetStringValue(cJSON_GetObjectItem(data_json, "phone_id")));
             auth->user_type = (enum userType) cJSON_GetNumberValue(cJSON_GetObjectItem(data_json, "type"));
 
             char* master_key_base64 = decrypt_base64_RSA(cJSON_GetStringValue(cJSON_GetObjectItem(data_json, "master_key_encrypted_lock")));
