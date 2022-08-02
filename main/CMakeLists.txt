@@ -18,9 +18,10 @@ idf_component_register(
         "utils/esp_touch_util.c"
         "utils/wifi_connect_util.c"
         "utils/database_util.c"
+        "utils/power_util.c"
 
 
-    INCLUDE_DIRS "utils"
+        INCLUDE_DIRS "utils"
 )
 
 spiffs_create_partition_image(storage ../spiffs_image FLASH_IN_PROJECT)

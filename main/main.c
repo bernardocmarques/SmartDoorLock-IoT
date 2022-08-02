@@ -3,16 +3,20 @@
 #include <esp_spiffs.h>
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "esp_sleep.h"
 
 #include "tcp_server.c"
 #include "ble_server.c"
+//#if CONFIG_IDF_TARGET_ESP32S3
 #include "ble_s3_server.c"
+//#endif
 
 #include "esp_touch_util.h"
 #include "wifi_connect_util.h"
 
 #include "utils/database_util.h"
 #include "rsa_util.h"
+#include "power_util.h"
 
 #define IDF_TARGET      (CONFIG_IDF_TARGET)
 
@@ -122,12 +126,19 @@ void init_led_lock_state() {
 }
 
 void app_main(void) {
-
     ESP_ERROR_CHECK(nvs_flash_init());
-//    delete_saved_wifi(); // fixme remove
-    delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
-    delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
+
+    bool wakeup_from_deep_sleep = (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER);
+
+    ESP_LOGE(TAG_MAIN, "%s", wakeup_from_deep_sleep ? "Wake up from deep sleep" : "First Boot");
+
+    if (!wakeup_from_deep_sleep) {
+
+//        delete_saved_wifi(); // fixme remove
+        delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
+        delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
+    }
 
     if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         // pass
@@ -170,4 +181,6 @@ void app_main(void) {
 //    create_invite(1, admin, -1, -1, NULL, -1);
 
     init_led_lock_state();
+
+    start_deep_sleep_timer(10, 20);
 }
