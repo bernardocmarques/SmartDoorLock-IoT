@@ -14,7 +14,7 @@
 
 const char TAG[] = "RSA_UTIL";
 
-static char privkey_2048_buf[2048];
+RTC_DATA_ATTR static char privkey_2048_buf[2048];
 
 
 void set_rsa_private_key(const char* key) {
@@ -27,10 +27,8 @@ static int myrand(void *rng_state, unsigned char *output, size_t len) {
 }
 
 
-void print_array_RSA(unsigned char* a, int n) {
-    for (int i = 0; i < n; i++) {
-        ESP_LOGI("TEST", "%x, ", a[i]);
-    }
+void print_rsa_key() {
+    ESP_LOGI(TAG, "%s", privkey_2048_buf);
 }
 
 char* sign_RSA(char* to_sign) {

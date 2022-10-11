@@ -145,7 +145,7 @@ lock_registration_status_t get_registration_status() {
     if (registration_status == UNKNOWN_STATUS) {
         registration_status = get_registration_status_server();
     }
-    ESP_LOGE(TAG, "got reg status = %d", registration_status);
+    ESP_LOGI(TAG, "got reg status = %d", registration_status);
 
     return registration_status;
 }

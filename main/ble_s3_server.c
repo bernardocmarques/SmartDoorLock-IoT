@@ -38,7 +38,7 @@
 #define SAMPLE_DEVICE_NAME          "SmartLockBLE-S3"    //The Device Name Characteristics in GAP
 
 
-#define VERBOSE_LEVEL               2 // fixme change to config
+#define VERBOSE_LEVEL               0 // fixme change to config
 
 /// SPP Service
 static const uint16_t spp_service_uuid = 0xffe0;
@@ -328,7 +328,6 @@ static void process_normal_data(char* data) {
         return;
     }
 
-    ESP_LOGI(BLE_S3_TAG, "DATA ----> %s", data);
 
     char* response;
     char* response_enc;
@@ -357,11 +356,9 @@ static void process_normal_data(char* data) {
 
             char* cmd = decrypt_base64_AES(aes, data);
 
-            ESP_LOGI(BLE_S3_TAG, "After Dec: %s", cmd);
             response = checkCommand(cmd, ble_user_addr);
         }
 
-        ESP_LOGI(BLE_S3_TAG, "resp -> %s", response);
         response_ts = addTimestampsAndNonceToMsg(response);
 
         response_enc = encrypt_str_AES(aes, response_ts);
@@ -387,7 +384,6 @@ static void process_normal_data(char* data) {
 
             response = malloc((sizeof(char) * 5) + base64_size);
 
-            ESP_LOGI(BLE_S3_TAG, "RAC %s", seed_base64); //FIXME remove
 
             sprintf(response, "RAC %s", seed_base64);
 
@@ -402,7 +398,6 @@ static void process_normal_data(char* data) {
 
         char* cmd = decrypt_base64_AES(aes, data);
 
-        ESP_LOGI(BLE_S3_TAG, "After Dec: %s", cmd);
         response = checkCommand(cmd, ble_user_addr);
 
     } else {
@@ -608,6 +603,9 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
             spp_conn_id = p_data->connect.conn_id;
             spp_gatts_if = gatts_if;
             is_connected = true;
+            cancel_deep_sleep_timer();
+
+
             memcpy(&spp_remote_bda,&p_data->connect.remote_bda,sizeof(esp_bd_addr_t));
             sprintf(ble_user_addr, "%02x:%02x:%02x:%02x:%02x:%02x",
                     spp_remote_bda[0],
@@ -628,6 +626,8 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
             /* start advertising again when missing the connect */
             is_connected = false;
             enable_data_ntf = false;
+
+            start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);
 
             esp_ble_gap_ext_adv_start(NUM_EXT_ADV_SET, &ext_adv[0]);
 

@@ -7,9 +7,9 @@
 
 #include "tcp_server.c"
 #include "ble_server.c"
-//#if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S3
 #include "ble_s3_server.c"
-//#endif
+#endif
 
 #include "esp_touch_util.h"
 #include "wifi_connect_util.h"
@@ -26,6 +26,8 @@
 const static char* TAG_MAIN = "MAIN";
 
 void init_rsa_key() {
+    print_rsa_key();
+
     ESP_LOGI(TAG_MAIN, "Initializing SPIFFS");
 
     esp_vfs_spiffs_conf_t conf = {
@@ -113,6 +115,8 @@ void init_rsa_key() {
     // All done, unmount partition and disable SPIFFS
     esp_vfs_spiffs_unregister(NULL);
     ESP_LOGI(TAG_MAIN, "SPIFFS unmounted");
+    print_rsa_key();
+
 }
 
 void init_led_lock_state() {
@@ -125,6 +129,7 @@ void init_led_lock_state() {
     }
 }
 
+
 void app_main(void) {
     ESP_ERROR_CHECK(nvs_flash_init());
 
@@ -135,15 +140,19 @@ void app_main(void) {
     if (!wakeup_from_deep_sleep) {
 
 //        delete_saved_wifi(); // fixme remove
-        delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
-        delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
+//        delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
+//        delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
     }
 
-    if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
-        // pass
-    } else {
-        ble_s3_main();
+    if (!wakeup_from_deep_sleep && false) { // fixme remove false after test
+        if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
+            // pass
+        } else {
+            #if CONFIG_IDF_TARGET_ESP32S3
+            ble_s3_main();
+            #endif
+        }
     }
 
     wifi_config_t wifiConfig;
@@ -155,12 +164,10 @@ void app_main(void) {
         try_to_connect_to_wifi_esp_touch();
     }
 
-
     set_led_status(led_idle);
 
     obtain_time();
-
-    init_rsa_key();
+    if (!wakeup_from_deep_sleep) init_rsa_key();
 
     tcp_main();
 
@@ -169,9 +176,17 @@ void app_main(void) {
     if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
         ble_main();
     } else {
+        #if CONFIG_IDF_TARGET_ESP32S3
         server_online = true;
-        send_data_ble_s3("LOK");
+        if (!wakeup_from_deep_sleep && false) { // fixme remove false after test
+            send_data_ble_s3("LOK");
+        } else {
+            ble_s3_main();
+        }
+        #endif
     }
+
+
 
 
 //    heap_caps_check_integrity_all(1); // fixme remove
@@ -182,5 +197,8 @@ void app_main(void) {
 
     init_led_lock_state();
 
-    start_deep_sleep_timer(10, 20);
+    if (get_registration_status() == COMPLETE) start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);
+    ESP_LOGI(TAG_MAIN, "All components initialized, system working!");
+
+
 }

@@ -35,6 +35,7 @@
 
 
 #include "time_util.h"
+#include "power_util.h"
 
 #define PORT                        CONFIG_EXAMPLE_PORT
 #define KEEPALIVE_IDLE              CONFIG_EXAMPLE_KEEPALIVE_IDLE
@@ -54,6 +55,7 @@ static void disconnect_sock(const int sock) {
     free_AES(get_user_AES_ctx(addr_str));
     close(sock);
     disconnect_lock();
+    start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);
 }
 
 static void do_retransmit(const int sock) {
@@ -219,12 +221,15 @@ static void tcp_server_task(void *pvParameters) {
 #endif
         ESP_LOGI(TAG_TCP, "Socket accepted ip address: %s", addr_str);
 
+        cancel_deep_sleep_timer();
+
         set_user_state(addr_str, CONNECTING, "");
 
         do_retransmit(sock);
 
         // free_AES(AES_ctx); //FIXME check this
         shutdown(sock, 0);
+        start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);
         close(sock);
     }
 

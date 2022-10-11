@@ -134,7 +134,6 @@ static char** getArgs(char* str, int n) {
     while (pt != NULL && i<n) {
         args[i] = malloc(sizeof(char) * (strlen(pt)+1));
         strcpy(args[i++], pt);
-        ESP_LOGI("example", "pt = %s", pt);
         pt = strtok(NULL, SEP);
     }
 
@@ -160,7 +159,7 @@ static void free_args(char** args, int n) {
 
 static char* checkCommand(char* cmd, char* user_ip) {
 
-    ESP_LOGW("example", "Received cmd %s", cmd);
+//    ESP_LOGW("example", "Received cmd %s", cmd); //fixme remove
 
     char* c = getCommand(cmd);
 
@@ -193,7 +192,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free_args(args, 5);
 
         return is_valid ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RUD") == 0) { // Request Unlock Door
+    }
+    else if (strcmp(c, "RUD") == 0) { // Request Unlock Door
         char **args = getArgs(cmd, 3);
 
         if (args == NULL) {
@@ -216,7 +216,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free(c);
         set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RLD") == 0) { // Request Lock Door
+    }
+    else if (strcmp(c, "RLD") == 0) { // Request Lock Door
         char **args = getArgs(cmd, 3);
 
         if (args == NULL) {
@@ -240,7 +241,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free(c);
         set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RNI") == 0) { // Request New Invite
+    }
+    else if (strcmp(c, "RNI") == 0) { // Request New Invite
         int n_args = 0;
 
         if (strncmp("RNI 0", (char *) cmd, 5) == 0) {
@@ -316,7 +318,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free(c);
         set_BLE_user_state_to_connecting();
         return response;
-    }  else if (strcmp(c, "RFI") == 0) {
+    }
+    else if (strcmp(c, "RFI") == 0) {
 
         if (get_registration_status() != REGISTERED) {
             free(c);
@@ -358,7 +361,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free_args(args, n_args);
         free(c);
         return response;
-    } else if (strcmp(c, "RLD") == 0) { // Request Lock Door
+    }
+    else if (strcmp(c, "RLD") == 0) { // Request Lock Door
         char **args = getArgs(cmd, 3);
 
         if (args == NULL) {
@@ -382,7 +386,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free(c);
         set_BLE_user_state_to_connecting();
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RUI") == 0) { // Request User Invite
+    }
+    else if (strcmp(c, "RUI") == 0) { // Request User Invite
         char **args = getArgs(cmd, 4);
 
         if (args == NULL) {
@@ -466,7 +471,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free(c);
         set_BLE_user_state_to_connecting();
         return response;
-    } else if (strcmp(c, "SNT") == 0) {
+    }
+    else if (strcmp(c, "SNT") == 0) {
         char **args = getArgs(cmd, 4);
 
         if (args == NULL) {
@@ -487,7 +493,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free_args(args, 4);
         free(c);
         return ack ? ACK_MESSAGE : NAK_MESSAGE;
-    } else if (strcmp(c, "RDS") == 0) {
+    }
+    else if (strcmp(c, "RDS") == 0) {
         char **args = getArgs(cmd, 3);
 
         if (args == NULL) {
@@ -515,7 +522,8 @@ static char* checkCommand(char* cmd, char* user_ip) {
         free(c);
         set_BLE_user_state_to_connecting();
         return response;
-    } else {
+    }
+    else {
         set_BLE_user_state_to_connecting();
         return NAK_MESSAGE;
     }

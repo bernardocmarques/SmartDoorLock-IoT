@@ -27,4 +27,6 @@ RSA_Decrypted* decrypt_RSA(uint8_t* chipertext);
 
 char* decrypt_base64_RSA(char* chipertext_base64);
 
+void print_rsa_key();
+
 #endif // RSA_UTIL_H

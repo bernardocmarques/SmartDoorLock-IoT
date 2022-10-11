@@ -107,11 +107,13 @@ _Noreturn static void echo_task(void *arg) {
                 ESP_LOGI(TAG_BLE, "Received AT cmd: %s", data);
                 if (strncmp("+CONNECTED", (char *) data, 10) == 0) {
                     set_user_state(ble_user, CONNECTING, "");
+                    cancel_deep_sleep_timer();
                     set_current_BLE_addr(ble_user);
                 } else if (strncmp("+DISCONNECT", (char *) data, 13) == 0) {
                     set_user_state(ble_user, DISCONNECTED, "");
                     set_current_BLE_addr("");
                     disconnect_lock();
+                    start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);
                 }
 
                 continue;
@@ -177,7 +179,7 @@ _Noreturn static void echo_task(void *arg) {
 
                     response = malloc((sizeof(char) * 5) + base64_size);
 
-                    ESP_LOGI(TAG_BLE, "RAC %s", seed_base64); //FIXME remove
+//                    ESP_LOGI(TAG_BLE, "RAC %s", seed_base64); //FIXME remove
 
                     sprintf(response, "RAC %s", seed_base64);
 

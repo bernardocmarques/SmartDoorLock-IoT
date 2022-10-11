@@ -102,11 +102,8 @@ static void do_retransmit(const int sock) {
                 response = checkCommand(cmd);
             }
 
-            ESP_LOGE(TAG, "antes de enc"); //FIXME DEBUG
             // char* response_enc = encrypt_str_AES(AES_ctx, response);
             char* response_enc = response;
-            ESP_LOGE(TAG, "Depois de enc"); //FIXME DEBUG
-            ESP_LOGE(TAG, "Depois de enc - %s", response_enc); //FIXME DEBUG
             len = strlen(response_enc);
 
 
