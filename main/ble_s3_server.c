@@ -319,7 +319,9 @@ bool got_first_invite_session_key_s3 = false;
 static void process_normal_data(char* data) {
 
     if (strcmp(data, "PNG") == 0) {
-        send_data_ble_s3(server_online ? "LOK" : "LNO");
+        char LOK[4] = "LOK";
+        char LNO[4] = "LNO";
+        send_data_ble_s3(server_online ? LOK : LNO);
         return;
     }
 

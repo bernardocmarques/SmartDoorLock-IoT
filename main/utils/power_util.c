@@ -22,6 +22,12 @@ void deep_sleep_for_n_seconds(int seconds) {
 
 void cancel_deep_sleep_timer() {
     ESP_LOGE(TAG, "Try Deep sleep timer canceled!");
+    int i = 3;
+
+    while ((deep_sleep_timer == NULL || !esp_timer_is_active(deep_sleep_timer)) && i--){
+        usleep((1)*1000000UL); // sleep 1sec
+    }
+
     if (deep_sleep_timer != NULL && esp_timer_is_active(deep_sleep_timer)) {
         ESP_ERROR_CHECK(esp_timer_stop(deep_sleep_timer));
         ESP_LOGI(TAG, "Deep sleep timer canceled!");
@@ -29,7 +35,6 @@ void cancel_deep_sleep_timer() {
 }
 
 void start_deep_sleep_timer(int delay_seconds, int sleep_time_seconds) {
-    return;
     if (deep_sleep_timer != NULL && esp_timer_is_active(deep_sleep_timer)) {
         return;
     }

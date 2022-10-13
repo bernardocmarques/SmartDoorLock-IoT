@@ -72,11 +72,28 @@ static void do_retransmit(const int sock) {
             ESP_LOGW(TAG_TCP, "Connection closed");
         } else {
             rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
-            ESP_LOGI(TAG_TCP, "Received %d bytes: %s", len, rx_buffer);
 
             user_state_t state = get_user_state(addr_str);
             esp_aes_context aes;
             aes = get_user_AES_ctx(addr_str);
+
+//            // fixme remove test vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//            if (strcmp(rx_buffer, "PNG") == 0) {
+//                char LOK[4] = "LOK";
+//
+//                len = 3;
+//                int to_write = len;
+//                while (to_write > 0) {
+//                    int written = send(sock, LOK + (len - to_write), to_write, 0);
+//                    if (written < 0) {
+//                        ESP_LOGE(TAG_TCP, "Error occurred during sending: errno %d", errno);
+//                    }
+//                    to_write -= written;
+//                }
+//                continue;
+//            }
+//            // fixme remove test ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
             char* response;
             if (state == CONNECTING) {
@@ -105,7 +122,6 @@ static void do_retransmit(const int sock) {
             } else if (state >= CONNECTED) { // Connected or Authorized
                 aes = get_user_AES_ctx(addr_str);
                 char* cmd = decrypt_base64_AES(aes, rx_buffer);
-                ESP_LOGI(TAG_TCP, "After Dec: %s", cmd);
                 response = checkCommand(cmd, addr_str);
             } else {
                 ESP_LOGE(TAG_TCP, "Disconnected by server! (Not CONNECTED)");
@@ -127,7 +143,6 @@ static void do_retransmit(const int sock) {
                 }
                 to_write -= written;
             }
-            ESP_LOGI(TAG_TCP, "Wrote %d bytes: %s", len, response_enc);
 
             if (strcmp(response, NAK_MESSAGE) == 0) {
                 disconnect_sock(sock);

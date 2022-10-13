@@ -106,8 +106,6 @@ void init_rsa_key() {
         fread(buf, 1, buf_size, f_cert);
         fclose(f_cert);
 
-        ESP_LOGI(TAG_MAIN, "Read from cert:\n%s", buf);
-
         register_lock(buf, ble_mac);
         force_get_registration_status();
     }
@@ -138,14 +136,16 @@ void app_main(void) {
     ESP_LOGE(TAG_MAIN, "%s", wakeup_from_deep_sleep ? "Wake up from deep sleep" : "First Boot");
 
     if (!wakeup_from_deep_sleep) {
-
-//        delete_saved_wifi(); // fixme remove
-//        delete_authorization("I9CUJwR1u2XK0fJ"); // fixme remove
+        if (gpio_get_level(14) != 0) { // if LOW normal behavior, if HIGH reset memory
+       // delete_saved_wifi(); // fixme remove
+       // delete_authorization("T8hA27vnH0wdRn3"); // fixme remove
+        ESP_LOGE(TAG_MAIN, "reset"); // fixme remove
 //        delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
+        }
     }
 
-    if (!wakeup_from_deep_sleep && false) { // fixme remove false after test
+    if (!wakeup_from_deep_sleep) {
         if (strcmp(IDF_TARGET, ESP32_S2_TARGET) == 0) {
             // pass
         } else {
@@ -178,7 +178,7 @@ void app_main(void) {
     } else {
         #if CONFIG_IDF_TARGET_ESP32S3
         server_online = true;
-        if (!wakeup_from_deep_sleep && false) { // fixme remove false after test
+        if (!wakeup_from_deep_sleep) {
             send_data_ble_s3("LOK");
         } else {
             ble_s3_main();
