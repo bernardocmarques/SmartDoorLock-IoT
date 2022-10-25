@@ -37,7 +37,6 @@ void cancel_deep_sleep_timer() {
 }
 
 void start_deep_sleep_timer(int delay_seconds, int sleep_time_seconds) {
-    return; //fixme remove
     if (deep_sleep_timer != NULL && esp_timer_is_active(deep_sleep_timer)) {
         return;
     }
