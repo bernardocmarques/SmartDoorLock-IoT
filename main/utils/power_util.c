@@ -3,6 +3,7 @@
 #include <esp_timer.h>
 #include <sys/unistd.h>
 #include "power_util.h"
+#include "lock_status.h"
 
 static const char *TAG = "POWER_UTIL";
 
@@ -17,6 +18,7 @@ void deep_sleep_for_n_seconds(int seconds) {
     ESP_LOGI(TAG, "Enabling timer wakeup, %ds\n", seconds);
     esp_sleep_enable_timer_wakeup(seconds * 1000000);
 
+    sleep_lock();
     esp_deep_sleep_start();
 }
 
@@ -35,6 +37,7 @@ void cancel_deep_sleep_timer() {
 }
 
 void start_deep_sleep_timer(int delay_seconds, int sleep_time_seconds) {
+    return; //fixme remove
     if (deep_sleep_timer != NULL && esp_timer_is_active(deep_sleep_timer)) {
         return;
     }

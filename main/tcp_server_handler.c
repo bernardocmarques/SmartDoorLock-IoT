@@ -159,7 +159,6 @@ static void free_args(char** args, int n) {
 
 static char* checkCommand(char* cmd, char* user_ip) {
 
-//    ESP_LOGW("example", "Received cmd %s", cmd); //fixme remove
 
     char* c = getCommand(cmd);
 

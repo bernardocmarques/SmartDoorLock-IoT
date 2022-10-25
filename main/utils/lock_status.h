@@ -11,6 +11,7 @@ typedef enum  {
     led_idle = 0,
     led_locked = 1,
     led_unlocked = 2,
+    led_sleep = 3
 } led_status_t;
 
 
@@ -23,5 +24,7 @@ void lock_lock();
 void unlock_lock();
 
 void disconnect_lock();
+
+void sleep_lock();
 #endif // LOCK_STATUS_H
 

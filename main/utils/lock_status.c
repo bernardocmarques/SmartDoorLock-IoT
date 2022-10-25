@@ -19,11 +19,12 @@ const int green[3] = {0,10,0};
 const int blue[3] = {0,0,10};
 const int yellow[3] = {10,10,0};
 
-int color_from_status[3][3]  =
+int color_from_status[4][3]  =
         {
         {10,10,0},
         {0, 0, 10},
-        {0, 10, 0}
+        {0, 10, 0},
+        {0, 0, 0}
         };
 
 
@@ -71,4 +72,8 @@ void unlock_lock() {
 
 void disconnect_lock() {
     set_led_status(led_idle);
+}
+
+void sleep_lock() {
+    set_led_status(led_sleep);
 }

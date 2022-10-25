@@ -136,13 +136,13 @@ void app_main(void) {
     ESP_LOGE(TAG_MAIN, "%s", wakeup_from_deep_sleep ? "Wake up from deep sleep" : "First Boot");
 
     if (!wakeup_from_deep_sleep) {
-        if (gpio_get_level(14) != 0) { // if LOW normal behavior, if HIGH reset memory
-       // delete_saved_wifi(); // fixme remove
-       // delete_authorization("T8hA27vnH0wdRn3"); // fixme remove
-        ESP_LOGE(TAG_MAIN, "reset"); // fixme remove
+//        if (gpio_get_level(14) != 0) { // if LOW normal behavior, if HIGH reset memory
+//        delete_saved_wifi(); // fixme remove
+//        delete_authorization("T8hA27vnH0wdRn3"); // fixme remove
+//        ESP_LOGE(TAG_MAIN, "reset"); // fixme remove
 //        delete_authorization("AA4PFbrPYOpq7fe"); // fixme remove
 //    restart_esp(3); // fixme remove
-        }
+//        }
     }
 
     if (!wakeup_from_deep_sleep) {
