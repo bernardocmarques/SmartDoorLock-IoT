@@ -179,7 +179,6 @@ _Noreturn static void echo_task(void *arg) {
 
                     response = malloc((sizeof(char) * 5) + base64_size);
 
-//                    ESP_LOGI(TAG_BLE, "RAC %s", seed_base64); //FIXME remove
 
                     sprintf(response, "RAC %s", seed_base64);
 

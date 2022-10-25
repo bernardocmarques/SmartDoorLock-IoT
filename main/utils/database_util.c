@@ -286,7 +286,7 @@ esp_err_t get_authorization_db(char* phone_id, authorization* auth) {
             int code = (int)cJSON_GetNumberValue(cJSON_GetObjectItem(result_json, "code"));
             char* message = cJSON_GetStringValue(cJSON_GetObjectItem(result_json, "msg"));
             ESP_LOGE(TAG, "Get Authorization: Error Code %d: %s", code, message);
-            return ERR_ARG; //fixme maybe fix error type
+            return ERR_ARG;
         }
 
     } else {

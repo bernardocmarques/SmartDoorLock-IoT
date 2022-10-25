@@ -62,7 +62,6 @@ static void do_retransmit(const int sock) {
     int len;
     char rx_buffer[512];
 
-//    vTaskDelete(bleTask); // fixme maybe suspend anyway
 
     do {
         len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
@@ -242,7 +241,6 @@ static void tcp_server_task(void *pvParameters) {
 
         do_retransmit(sock);
 
-        // free_AES(AES_ctx); //FIXME check this
         shutdown(sock, 0);
         start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);
         close(sock);

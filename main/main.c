@@ -195,6 +195,7 @@ void app_main(void) {
 
 //    create_invite(1, admin, -1, -1, NULL, -1);
 
+
     init_led_lock_state();
 
     if (get_registration_status() == COMPLETE) start_deep_sleep_timer(DEFAULT_SLEEP_DELAY, DEFAULT_SLEEP_TIME);

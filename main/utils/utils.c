@@ -10,6 +10,7 @@
 #include "base64_util.h"
 #include "user_info.h"
 #include "database_util.h"
+#include "time_util.h"
 
 static const char *TAG = "Utils";
 
@@ -155,5 +156,11 @@ lock_registration_status_t force_get_registration_status() {
     registration_status = UNKNOWN_STATUS;
 
     return get_registration_status();
+}
+
+/********************* Invite Util ***********************/
+
+int getDefaultExpirationTimestamp() {
+    return getNowTimestamp() + 3600;
 }
 

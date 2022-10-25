@@ -38,7 +38,7 @@
 #define SAMPLE_DEVICE_NAME          "SmartLockBLE-S3"    //The Device Name Characteristics in GAP
 
 
-#define VERBOSE_LEVEL               0 // fixme change to config
+#define VERBOSE_LEVEL               0
 
 /// SPP Service
 static const uint16_t spp_service_uuid = 0xffe0;
@@ -372,7 +372,6 @@ static void process_normal_data(char* data) {
     user_state_t state = get_user_state(ble_user_addr);
     aes = get_user_AES_ctx(ble_user_addr);
 
-    heap_caps_check_integrity_all(1); // fixme remove
     ESP_LOGW(BLE_S3_TAG, "State = %d", state);
 
 
@@ -546,7 +545,6 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
         case ESP_GATTS_READ_EVT:
             res = find_char_and_desr_index(p_data->read.handle);
             if(res == SPP_IDX_SPP_STATUS_VAL){
-                //TODO:client read the status characteristic
             }
             break;
         case ESP_GATTS_WRITE_EVT:
@@ -572,11 +570,8 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
                 }
                 else if(res == SPP_IDX_SPP_DATA_RECV_VAL) { // if data recieved is normal data
                     char* data = (char *)(p_data->write.value);
-                    //TODO check for EOT char
-
                     process_normal_data(data);
                 }else {
-                    //TODO:
                 }
             }else if((p_data->write.is_prep == true) && (res == SPP_IDX_SPP_DATA_RECV_VAL)){
                 if (VERBOSE_LEVEL >= 2) ESP_LOGI(BLE_S3_TAG, "ESP_GATTS_PREP_WRITE_EVT : handle = %d\n", res);

@@ -296,7 +296,7 @@ static char* checkCommand(char* cmd, char* user_ip) {
                     ESP_LOGE("Error", "User does not have enough permissions to create this invite.");
                     response = NAK_MESSAGE;
                 } else {
-                    char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day, NULL);
+                    char* invite_id = create_invite(getDefaultExpirationTimestamp(), user_type, valid_from, valid_until, weekdays_str, one_day, NULL);
 
                     response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
@@ -344,7 +344,7 @@ static char* checkCommand(char* cmd, char* user_ip) {
 
         if (verifyTimestampsAndNonce(args, n_args - 3)) {
 
-            char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day, NULL);
+            char* invite_id = create_invite(getDefaultExpirationTimestamp(), user_type, valid_from, valid_until, weekdays_str, one_day, NULL);
 
             response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
@@ -449,7 +449,7 @@ static char* checkCommand(char* cmd, char* user_ip) {
                     ESP_LOGE("Error", "User does not have enough permissions to create this invite.");
                     response = NAK_MESSAGE;
                 } else {
-                    char* invite_id = create_invite(1649787416/*fixme change*/, user_type, valid_from, valid_until, weekdays_str, one_day, email);
+                    char* invite_id = create_invite(getDefaultExpirationTimestamp(), user_type, valid_from, valid_until, weekdays_str, one_day, email);
 
                     response = malloc(strlen("XXX ") + strlen(invite_id) + 1);
 
